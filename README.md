@@ -144,7 +144,7 @@ The final technology stack will be defined during the design phase of the projec
 
 The project requirements include:
 
-* a **REST API** developped with **Nodejs**;
+* a **REST API** developped with **Node.js**;
 * a **React** frontend application;
 * **MySQL**;
 * **PostgreSQL**;
@@ -156,7 +156,7 @@ The project requirements include:
 
 ### API Framework
 
-The project backend using Nodejs, the best suited REST API framework is **Fastify**, a fast web framework for Node.js: `https://fastify.dev/`.
+The project backend using Node.js, the best suited REST API framework is **Fastify**, a fast web framework for Node.js: `https://fastify.dev/`.
 
 ---
 

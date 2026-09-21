@@ -1,0 +1,220 @@
+# =========================================================
+# Dependencies
+# =========================================================
+
+node_modules/
+**/node_modules/
+
+
+# =========================================================
+# Environment variables / secrets
+# =========================================================
+
+.env
+.env.*
+!.env.example
+
+# Local environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+
+# =========================================================
+# Build / production
+# =========================================================
+
+dist/
+build/
+coverage/
+
+**/dist/
+**/build/
+**/coverage/
+
+
+# =========================================================
+# Logs
+# =========================================================
+
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# =========================================================
+# Runtime files
+# =========================================================
+
+*.pid
+*.seed
+*.pid.lock
+
+
+# =========================================================
+# Temporary files
+# =========================================================
+
+tmp/
+temp/
+.cache/
+.parcel-cache/
+.eslintcache
+
+
+# =========================================================
+# OS files
+# =========================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+
+# =========================================================
+# IDE / Editors
+# =========================================================
+
+# Visual Studio Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# IntelliJ / JetBrains
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+
+# =========================================================
+# TypeScript
+# =========================================================
+
+*.tsbuildinfo
+
+
+# =========================================================
+# React / Vite
+# =========================================================
+
+.vite/
+
+
+# =========================================================
+# Testing
+# =========================================================
+
+.nyc_output/
+playwright-report/
+test-results/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+
+
+# =========================================================
+# Docker
+# =========================================================
+
+# Local Docker environment files
+docker-compose.override.yml
+
+# Docker local volumes if mounted inside the repository
+docker/volumes/
+
+# Docker development data
+docker/data/
+
+
+# =========================================================
+# Database
+# =========================================================
+
+# Local database data
+database/data/
+database/volumes/
+
+# SQLite databases (if ever used locally)
+*.sqlite
+*.sqlite3
+*.db
+
+
+# =========================================================
+# Generated files
+# =========================================================
+
+*.generated.*
+generated/
+
+# API generated documentation
+docs/generated/
+
+
+# =========================================================
+# Certificates / keys
+# =========================================================
+
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Except documentation/example certificates if needed
+!docs/**/*.example.pem
+!docs/**/*.example.crt
+
+
+# =========================================================
+# Backups
+# =========================================================
+
+# IMPORTANT:
+# Do not commit real database backups
+backups/
+*.sql.gz
+*.sql.zip
+*.dump
+*.backup
+
+
+# =========================================================
+# Package managers
+# =========================================================
+
+.npm/
+.yarn/
+.pnpm-store/
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+.pnp.*
