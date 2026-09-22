@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: safebase_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: demo_mysql
+      MYSQL_USER: safebase
+      MYSQL_PASSWORD: safebasepass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  postgres:
+    image: postgres:16
+    container_name: safebase_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: demo_postgres
+      POSTGRES_USER: safebase
+      POSTGRES_PASSWORD: safebasepass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:7
+    container_name: safebase_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: safebase
+      MONGO_INITDB_ROOT_PASSWORD: safebasepass
+      MONGO_INITDB_DATABASE: demo_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mysql_data:
+  postgres_data:
+  mongo_data:
