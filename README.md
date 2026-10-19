@@ -261,11 +261,9 @@ Important technical decisions and source code should be properly documented.
 
 ## 💻 Installation
 
-> This section will be completed once the final technology stack and project configuration have been defined.
+This project runs through Docker. Refer to DOCKER.md to install Docker and get the project started with all required packages.
 
 ### Prerequisites
-
-The exact prerequisites will depend on the technologies selected.
 
 The development environment will need to support:
 
@@ -273,6 +271,7 @@ The development environment will need to support:
 * the frontend;
 * MySQL;
 * PostgreSQL;
+* MongoDB;
 * Docker.
 
 ### Clone the repository
