@@ -1,3 +1,4 @@
+
 services:
   mysql:
     image: mysql:8.4
@@ -12,7 +13,6 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-    networks: [safebase]
 
   postgres:
     image: postgres:16
@@ -26,7 +26,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks: [safebase]
 
   mongodb:
     image: mongo:7
@@ -40,39 +39,38 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-    networks: [safebase]
 
-backend:
-    build: ./backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: safebase_backend
     restart: unless-stopped
-    env_file: .env
     environment:
-      NODE_ENV: development
       PORT: 3000
       MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: demo_mysql
+      MYSQL_USER: safebase
+      MYSQL_PASSWORD: safebasepass
       POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: demo_postgres
+      POSTGRES_USER: safebase
+      POSTGRES_PASSWORD: safebasepass
       MONGO_HOST: mongodb
-      BACKUP_DIR: /backups
+      MONGO_PORT: 27017
+      MONGO_DATABASE: demo_mongo
+      MONGO_USER: safebase
+      MONGO_PASSWORD: safebasepass
     ports:
       - "3000:3000"
-    volumes:
-      - ./backend/src:/app/src       
-      - ./backups:/backups            
     depends_on:
-      mysql:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-    networks: [safebase]
-  
+      - mysql
+      - postgres
+      - mongodb
 
 volumes:
   mysql_data:
   postgres_data:
   mongo_data:
-
-networks:
-  safebase:

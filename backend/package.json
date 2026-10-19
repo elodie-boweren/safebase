@@ -1,0 +1,13 @@
+
+{
+  "name": "safebase-backend",
+  "version": "1.0.0",
+  "description": "API de sauvegarde et restauration de bases de données",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

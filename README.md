@@ -6,7 +6,7 @@ The project aims to provide users with a simple way to manage database connectio
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 * [Overview](#-overview)
 * [Features](#-features)
@@ -24,7 +24,7 @@ The project aims to provide users with a simple way to manage database connectio
 
 ---
 
-## 📖 Overview
+## Overview
 
 In today's business environment, data is one of an organization's most valuable assets. Data loss can have serious consequences, making reliable backup and restore mechanisms essential.
 
@@ -43,7 +43,7 @@ The project supports both **MySQL, PostgreSQL and MongoDB** databases.
 
 ---
 
-## 🚀 Features
+## Features
 
 ### Database Management
 
@@ -105,7 +105,7 @@ A user interface allows users to easily manage:
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 SafeBase is designed as a **layered application**.
 
@@ -138,21 +138,21 @@ The final architecture and the detailed organization of the application layers w
 
 ---
 
-## 🛠️ Technologies
+## Technologies
 
 The final technology stack will be defined during the design phase of the project.
 
 The project requirements include:
 
-* a **REST API** developped with **Node.js**;
-* a **React** frontend application;
-* **MySQL**;
-* **PostgreSQL**;
-* **MongoDB**;
-* **Docker**;
-* **cron** for scheduled operations;
-* native MySQL, MongoDB and PostgreSQL backup utilities;
-* automated testing tools.
+* a **REST API** developped with **Node.js**
+* a **React** frontend application
+* **MySQL**
+* **PostgreSQL**
+* **MongoDB**
+* **Docker**
+* **cron** for scheduled operations
+* native MySQL, MongoDB and PostgreSQL backup utilities
+* automated testing tools
 
 ### API Framework
 
@@ -160,7 +160,7 @@ The project backend using Node.js, the best suited REST API framework is **Fasti
 
 ---
 
-## 🗄️ Supported Databases
+## Supported Databases
 
 SafeBase supports the following database management systems:
 
@@ -174,7 +174,7 @@ Restore operations will use the appropriate tools for each database system.
 
 ---
 
-## 🐳 Containerization
+## Containerization
 
 The application is designed to be fully containerized using **Docker**.
 
@@ -194,18 +194,18 @@ Docker will make it easier to reproduce the development environment and run the 
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Testing is an integral part of the project.
 
 Tests will cover areas such as:
 
-* API functionality;
-* database connections;
-* backup execution;
-* restore operations;
-* error handling;
-* relevant frontend components.
+* API functionality
+* database connections
+* backup execution
+* restore operations
+* error handling
+* relevant frontend components
 
 Potential testing tools include:
 
@@ -213,11 +213,9 @@ Potential testing tools include:
 * Vitest
 * Cypress
 
-The final testing stack will depend on the technologies selected for the project.
-
 ---
 
-## 🔐 Code Quality & Best Practices
+## Code Quality & Best Practices
 
 The project follows common development standards to ensure code quality, consistency and maintainability.
 
@@ -259,20 +257,18 @@ Important technical decisions and source code should be properly documented.
 
 ---
 
-## 💻 Installation
-
-This project runs through Docker. Refer to DOCKER.md to install Docker and get the project started with all required packages.
+## Installation
 
 ### Prerequisites
 
 The development environment will need to support:
 
-* the API;
-* the frontend;
-* MySQL;
-* PostgreSQL;
-* MongoDB;
-* Docker.
+* the API
+* the frontend
+* MySQL
+* PostgreSQL
+* MongoDB
+* Docker
 
 ### Clone the repository
 
@@ -283,19 +279,40 @@ cd safebase
 
 ### Install dependencies
 
-```bash
-<INSTALL_COMMAND>
-```
+This project runs through Docker. Refer to DOCKER.md to install Docker Desktop and get the project started with all required packages.
+
 
 ### Start the application
 
-```bash
-<START_COMMAND>
-```
+Remain at the root of the project and run :
+
+`docker compose up --build -d`
+
+This command builds the image of the backend from the Dockerfile, installs Node.js and other dependencies defined in the package-lock.json and runs the services set in the Docker Compose. 
+
+You can then check that the containers are running healthily ->
+`docker compose ps`.
+
+Youcan test the API in a navigator :
+
+http://localhost:3000/api/health
+
+A JSON response will confirm that the backend is running.
+
+To check backend logs :
+`docker compose logs -f backend`
+
+To stop the containers :
+`docker compose down`
+
+This command does not remove any volume data.
+
+**Note for local development :** 
+If the backend must be executed directly on the computer, outside of Docker, for development purposes, you will need to install Node.js, then run `npm install` in the backend folder, beofre running `npm start`. 
 
 ---
 
-## ▶️ Usage
+##  Usage
 
 Once the application is running, users will be able to:
 
@@ -311,11 +328,9 @@ Once the application is running, users will be able to:
 
 ## 📁 Project Structure
 
-The final repository structure will be defined as the project develops.
+The structure of the project will be as follows: 
 
-A possible structure is:
-
-```text
+`
 plateforme-safebase/
 │
 ├── api/
@@ -336,11 +351,11 @@ plateforme-safebase/
 ├── docker-compose.yml
 ├── README.md
 └── ...
-```
+`
 
 ---
 
-## 📌 Project Management
+## Project Management
 
 The project is developed collaboratively using project management and version control tools.
 
@@ -348,13 +363,13 @@ The project is developed collaboratively using project management and version co
 
 Development is carried out on dedicated branches and integrated through Pull Requests.
 
-```text
+`
 main
  │
  ├── feature/...
  ├── fix/...
  └── ...
-```
+`
 
 ### Trello
 
@@ -362,9 +377,9 @@ Project tasks are managed using a Kanban board.
 
 The workflow is organized into the following stages:
 
-```text
+`
 BACKLOG → TODO → ONGOING → CODE REVIEW → TEST → DONE
-```
+`
 
 Labels are used to identify the technical area of each task:
 
@@ -399,7 +414,7 @@ Project documentation will include:
 
 ---
 
-## 🎯 Learning Objectives
+## Learning Objectives
 
 This project provides an opportunity to work on:
 
@@ -425,6 +440,6 @@ Project developed as part of the **La Plateforme_** training program by Armelle,
 
 ---
 
-## 📄 License
+## License
 
 This project was developed for educational purposes.
