@@ -12,10 +12,16 @@ Go to `https://docs.docker.com/desktop/setup/install/windows-install/`, follow t
 ### Installing Docker on linux:
 Go to `https://docs.docker.com/desktop/setup/install/linux/` and follow the instructions.
 
-## Commands to get the container running
+## Commands for docker compose
 
-Check that docker is installed properly: `docker --version`
+This project uses docker compose for a fast and efficient management of containers. 
 
-Once you get a reply to that command, you can enter `docker compose up -d` to build images and run the containers.
+First, check that docker is installed properly: `docker --version`. 
 
-to check that the containers are running healthily: `docker compose ps`. This lists the containers running and their state.
+Once you get a reply to that command, you can enter `docker compose up -d` to build images and run the containers in the detached mode.
+`docker images` will list all the images present in our docker. 
+
+To check that the containers are running healthily: `docker ps`. This lists the containers running and their state.
+
+Finally, to stop the containers type `docker compose down`
+
