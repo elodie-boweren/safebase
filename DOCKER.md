@@ -18,10 +18,14 @@ This project uses docker compose for a fast and efficient management of containe
 
 First, check that docker is installed properly: `docker --version`. 
 
-Once you get a reply to that command, you can enter `docker compose up -d` to build images and run the containers in the detached mode.
+Once you get a reply to that command, you can enter `docker compose up --build -d` to build the image of the backend from the Dockerfile, install all dependencies and run the services set in the Docker Compose. 
+
+Anytime after that just type `docker compose up -d` to build images and run the containers in the detached mode.
 `docker images` will list all the images present in our docker. 
 
-To check that the containers are running healthily: `docker ps`. This lists the containers running and their state.
+To check that the containers are running healthily: `docker compose ps`. This lists the containers running and their state.
 
-Finally, to stop the containers type `docker compose down`
+To check backend logs :
+`docker compose logs -f backend`.
 
+Finally, to stop the containers type `docker compose down`.
