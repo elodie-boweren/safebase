@@ -1,123 +1,226 @@
-/** Static demo data for UI work (no backend required). */
+/**
+ * Static mock data for SafeBase frontend (no backend yet).
+ *
+ * - mockUser            → login / inscription demo
+ * - connectedDatabases  → bases affichées sur le dashboard
+ * - backups             → historiques liés à chaque base (date, taille, statut)
+ * - scheduleOptions     → planification de sauvegarde
+ */
 
-export const databases = [
+export const mockUser = {
+  id: 1,
+  name: 'Emmanuelle',
+  email: 'emma@safebase.dev',
+  password: 'safebase123',
+}
+
+export const connectedDatabases = [
   {
     id: 1,
-    name: 'Demo MySQL',
+    name: 'prod_clients',
     type: 'mysql',
+    typeLabel: 'MySQL',
     host: 'localhost',
     port: 3306,
-    status: 'connected',
   },
   {
     id: 2,
-    name: 'Demo PostgreSQL',
-    type: 'postgresql',
+    name: 'dataPro',
+    type: 'postgres',
+    typeLabel: 'Postgres',
     host: 'localhost',
     port: 5432,
-    status: 'connected',
   },
   {
     id: 3,
-    name: 'Demo MongoDB',
+    name: 'prod-test',
     type: 'mongodb',
+    typeLabel: 'MongoDB',
     host: 'localhost',
     port: 27017,
-    status: 'disconnected',
   },
 ]
 
+/**
+ * Backups des bases connectées.
+ * status: "success" | "failed" | "running"
+ */
 export const backups = [
+  // prod_clients (MySQL)
   {
     id: 1,
     databaseId: 1,
-    databaseName: 'Demo MySQL',
-    createdAt: '2026-10-18T09:00:00Z',
-    size: '42 MB',
+    createdAt: '2026-09-16T14:08:00Z',
+    size: '2,4 Mo',
     status: 'success',
   },
   {
     id: 2,
-    databaseId: 2,
-    databaseName: 'Demo PostgreSQL',
-    createdAt: '2026-10-19T14:30:00Z',
-    size: '128 MB',
+    databaseId: 1,
+    createdAt: '2026-09-15T14:08:00Z',
+    size: '2,4 Mo',
     status: 'success',
   },
   {
     id: 3,
     databaseId: 1,
-    databaseName: 'Demo MySQL',
-    createdAt: '2026-10-20T08:15:00Z',
+    createdAt: '2026-09-14T14:08:00Z',
+    size: '2,3 Mo',
+    status: 'success',
+  },
+  {
+    id: 4,
+    databaseId: 1,
+    createdAt: '2026-09-13T14:08:00Z',
+    size: '2,2 Mo',
+    status: 'success',
+  },
+  {
+    id: 5,
+    databaseId: 1,
+    createdAt: '2026-10-20T10:00:00Z',
+    size: '2,5 Mo',
+    status: 'success',
+  },
+
+  // dataPro (Postgres)
+  {
+    id: 6,
+    databaseId: 2,
+    createdAt: '2026-10-19T15:00:00Z',
+    size: '128 Mo',
+    status: 'success',
+  },
+  {
+    id: 7,
+    databaseId: 2,
+    createdAt: '2026-10-18T15:00:00Z',
+    size: '126 Mo',
+    status: 'success',
+  },
+
+  // prod-test (MongoDB)
+  {
+    id: 8,
+    databaseId: 3,
+    createdAt: '2026-10-18T08:30:00Z',
     size: '—',
     status: 'failed',
   },
-]
-
-export const schedules = [
   {
-    id: 1,
-    databaseId: 1,
-    databaseName: 'Demo MySQL',
-    cron: '0 2 * * *',
-    label: 'Daily at 02:00',
-    enabled: true,
-  },
-  {
-    id: 2,
-    databaseId: 2,
-    databaseName: 'Demo PostgreSQL',
-    cron: '0 3 * * 0',
-    label: 'Weekly on Sunday at 03:00',
-    enabled: true,
-  },
-  {
-    id: 3,
+    id: 9,
     databaseId: 3,
-    databaseName: 'Demo MongoDB',
-    cron: '0 */6 * * *',
-    label: 'Every 6 hours',
-    enabled: false,
-  },
-]
-
-export const restores = [
-  {
-    id: 1,
-    backupId: 1,
-    databaseName: 'Demo MySQL',
-    startedAt: '2026-10-18T10:00:00Z',
+    createdAt: '2026-10-16T08:30:00Z',
+    size: '85 Mo',
     status: 'success',
   },
-  {
-    id: 2,
-    backupId: 2,
-    databaseName: 'Demo PostgreSQL',
-    startedAt: '2026-10-19T16:00:00Z',
-    status: 'failed',
-  },
 ]
+
+export const scheduleFrequencies = [
+  { value: 'daily', label: 'Tous les jours' },
+  { value: 'weekly', label: 'Toutes les semaines' },
+  { value: 'monthly', label: 'Tous les mois' },
+  { value: 'none', label: 'Aucune' },
+]
+
+export const scheduleHours = Array.from({ length: 24 }, (_, hour) => ({
+  value: String(hour),
+  label: `${String(hour).padStart(2, '0')}h`,
+}))
+
+export const scheduleMinutes = ['00', '15', '30', '45'].map((minute) => ({
+  value: minute,
+  label: minute,
+}))
+
+export const defaultSchedule = {
+  frequency: 'daily',
+  hour: '14',
+  minute: '00',
+}
 
 export const alerts = [
   {
     id: 1,
-    type: 'backup',
-    message: 'Backup failed for Demo MySQL',
-    createdAt: '2026-10-20T08:16:00Z',
+    databaseId: 3,
+    backupId: 8,
+    message: 'Echec sauvegarde - admin-pro',
+    createdAt: '15/09 14:02',
     severity: 'error',
-  },
-  {
-    id: 2,
-    type: 'restore',
-    message: 'Restore failed for Demo PostgreSQL',
-    createdAt: '2026-10-19T16:05:00Z',
-    severity: 'error',
-  },
-  {
-    id: 3,
-    type: 'connection',
-    message: 'Demo MongoDB is disconnected',
-    createdAt: '2026-10-20T07:00:00Z',
-    severity: 'warning',
   },
 ]
+
+/** Alias utilisé par le dashboard. */
+export const databases = connectedDatabases
+
+export function authenticateUser(email, password) {
+  const emailOk = email.trim().toLowerCase() === mockUser.email.toLowerCase()
+  const passwordOk = password === mockUser.password
+
+  if (!emailOk || !passwordOk) {
+    return null
+  }
+
+  return {
+    id: mockUser.id,
+    name: mockUser.name,
+    email: mockUser.email,
+  }
+}
+
+export function getDatabaseById(databaseId) {
+  return connectedDatabases.find((db) => db.id === databaseId) ?? null
+}
+
+export function getBackupsForDatabase(databaseId) {
+  return backups
+    .filter((backup) => backup.databaseId === databaseId)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+}
+
+export function getLatestBackup(databaseId) {
+  return getBackupsForDatabase(databaseId)[0] ?? null
+}
+
+export function formatBackupAge(isoDate, now = new Date()) {
+  const then = new Date(isoDate)
+  const diffMs = Math.max(0, now - then)
+  const hours = Math.floor(diffMs / (1000 * 60 * 60))
+
+  if (hours < 1) return "À l'instant"
+  if (hours < 24) return `Il y a ${hours}h`
+
+  const days = Math.floor(hours / 24)
+  return `Il y a ${days}j`
+}
+
+export function formatBackupDate(isoDate) {
+  const date = new Date(isoDate)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${day}/${month} ${hours}:${minutes}`
+}
+
+export function formatHost(database) {
+  return `${database.host}:${database.port}`
+}
+
+export function formatBackupStatus(status) {
+  if (status === 'success') return 'succès'
+  if (status === 'failed') return 'échec'
+  if (status === 'running') return 'en cours'
+  return status
+}
+
+export function getDatabaseRow(database, now = new Date()) {
+  const latest = getLatestBackup(database.id)
+
+  return {
+    ...database,
+    lastBackup: latest ? formatBackupAge(latest.createdAt, now) : '—',
+    status: latest?.status === 'success' ? 'ok' : latest ? 'failed' : 'unknown',
+    latestBackup: latest,
+  }
+}

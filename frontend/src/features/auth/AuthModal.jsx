@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Logo from '../../components/Logo'
 import AuthField from './AuthField'
+import { authenticateUser, mockUser } from '../../data/mocks'
 
 function AuthModal({ mode = 'login' }) {
   const navigate = useNavigate()
   const isLogin = mode === 'login'
+  const [error, setError] = useState('')
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -13,26 +16,35 @@ function AuthModal({ mode = 'login' }) {
 
   function handleChange(event) {
     const { name, value } = event.target
+    setError('')
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
   function handleSubmit(event) {
     event.preventDefault()
+    setError('')
 
     if (!isLogin && form.password !== form.confirmPassword) {
-      window.alert('Les mots de passe ne correspondent pas.')
+      setError('Les mots de passe ne correspondent pas.')
       return
     }
 
+    if (isLogin) {
+      const user = authenticateUser(form.email, form.password)
+      if (!user) {
+        setError('Email ou mot de passe incorrect.')
+        return
+      }
+    }
+
     // Static UI only — no backend yet
-    navigate('/databases')
+    navigate('/dashboard')
   }
 
   return (
     <div className="auth-modal" role="dialog" aria-labelledby="auth-title">
       <h1 id="auth-title" className="auth-logo">
-        <span className="auth-logo__safe">SAFE</span>
-        <span className="auth-logo__base">BASE</span>
+        <Logo />
       </h1>
 
       <form className="auth-form" onSubmit={handleSubmit}>
@@ -72,15 +84,22 @@ function AuthModal({ mode = 'login' }) {
           )}
         </div>
 
+        {error ? <p className="auth-error">{error}</p> : null}
+
         <button type="submit" className="auth-submit">
           {isLogin ? 'Se connecter' : "S'inscrire"}
         </button>
       </form>
 
       {isLogin ? (
-        <p className="auth-switch">
-          <Link to="/inscription">Pas de compte ? S&apos;inscrire</Link>
-        </p>
+        <>
+          <p className="auth-hint">
+            Demo : {mockUser.email} / {mockUser.password}
+          </p>
+          <p className="auth-switch">
+            <Link to="/inscription">Pas de compte ? S&apos;inscrire</Link>
+          </p>
+        </>
       ) : (
         <p className="auth-switch">
           <Link to="/">Déjà un compte ? Se connecter</Link>

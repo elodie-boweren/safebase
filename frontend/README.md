@@ -4,6 +4,8 @@ React user interface for SafeBase (database connections, backups, schedules, res
 
 For now the UI is **static**: pages read mock data from `src/data/mocks.js`. No backend is required.
 
+Demo login: `emma@safebase.dev` / `safebase123`
+
 ## Stack
 
 - React (Vite)
@@ -24,12 +26,12 @@ When the API is ready, replace mocks with calls from `src/services/api.js` (`htt
 
 ### Scripts
 
-| Command           | Description              |
-| ----------------- | ------------------------ |
-| `npm run dev`     | Start the Vite dev server |
-| `npm run build`   | Production build         |
+| Command           | Description                  |
+| ----------------- | ---------------------------- |
+| `npm run dev`     | Start the Vite dev server    |
+| `npm run build`   | Production build             |
 | `npm run preview` | Preview the production build |
-| `npm run lint`    | Run oxlint               |
+| `npm run lint`    | Run oxlint                   |
 
 ## Project structure
 
@@ -37,43 +39,38 @@ When the API is ready, replace mocks with calls from `src/services/api.js` (`htt
 frontend/
 ├── public/
 ├── src/
-│   ├── assets/           # Static assets
-│   ├── components/       # Shared UI components
-│   ├── features/         # Domain features
-│   │   ├── databases/
-│   │   ├── backups/
-│   │   ├── schedules/
-│   │   ├── restores/
-│   │   └── alerts/
-│   ├── layouts/          # App shell / navigation
-│   ├── pages/            # Routed pages (compose features)
-│   ├── data/             # Static mock data (used for now)
+│   ├── components/       # Shared UI (Logo, Button, Card, Navbar…)
+│   ├── features/
+│   │   ├── auth/         # Login / signup
+│   │   └── dashboard/    # Dashboard cards
+│   ├── layouts/
+│   ├── pages/
+│   ├── data/             # Static mocks
 │   ├── services/         # REST API client (for later)
-│   ├── hooks/            # Shared React hooks
-│   ├── utils/            # Helpers
 │   ├── App.jsx
 │   ├── main.jsx
 │   └── index.css
 └── tests/
 ```
 
-### How layers relate
+## Shared components
 
-- **pages** define routes and compose feature panels
-- **features** hold domain UI and logic
-- **data/mocks.js** feeds the UI while the backend is not ready
-- **components** hold reusable presentational pieces
-- **services** will talk to the backend REST API later
+| Component     | Role                                      |
+| ------------- | ----------------------------------------- |
+| `Logo`        | SAFE + BASE brand mark                    |
+| `Button`      | Pill buttons (`primary` / `secondary`)    |
+| `Card`        | White panel with optional title + action  |
+| `Navbar`      | Top bar (logo + logout)                   |
+| `Tag`         | DB type pills (MySQL / Postgres / MongoDB)|
+| `StatusIcon`  | Ok / Échec status                         |
+| `Badge`       | Notification count                        |
+| `EmptyState`  | Empty panel placeholder                   |
+| `AuthField`   | Auth label + input                        |
 
 ## Routes
 
-| Path          | Page            |
-| ------------- | --------------- |
-| `/`              | Connexion          |
-| `/inscription`   | Inscription        |
-| `/home`       | Home            |
-| `/databases`  | Databases        |
-| `/backups`    | Backups         |
-| `/schedules`  | Schedules       |
-| `/restores`   | Restores        |
-| `/alerts`     | Alerts          |
+| Path             | Page         |
+| ---------------- | ------------ |
+| `/`              | Connexion    |
+| `/inscription`   | Inscription  |
+| `/dashboard`     | Dashboard    |
