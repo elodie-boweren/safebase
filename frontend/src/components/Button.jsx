@@ -11,9 +11,9 @@ function Button({
 
   return (
     <button type={type} className={classes} {...props}>
-      {icon && iconPosition === 'start' ? icon : null}
-      <span>{children}</span>
-      {icon && iconPosition === 'end' ? icon : null}
+      {icon && iconPosition === 'start' ? <span className="btn__icon">{icon}</span> : null}
+      <span className="btn__label">{children}</span>
+      {icon && iconPosition === 'end' ? <span className="btn__icon">{icon}</span> : null}
     </button>
   )
 }

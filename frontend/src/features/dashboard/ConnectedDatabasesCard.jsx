@@ -3,10 +3,23 @@ import Button from '../../components/Button'
 import Tag from '../../components/Tag'
 import StatusIcon from '../../components/StatusIcon'
 import { PlusIcon } from '../../components/icons/Icons'
-import { connectedDatabases, getDatabaseRow } from '../../data/mocks'
+import { formatBackupAge } from '../../data/mocks'
 
-function ConnectedDatabasesCard({ selectedId, onSelect }) {
-  const rows = connectedDatabases.map((db) => getDatabaseRow(db))
+function getRow(database, backups, now = new Date()) {
+  const latest =
+    backups
+      .filter((backup) => backup.databaseId === database.id)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0] ?? null
+
+  return {
+    ...database,
+    lastBackup: latest ? formatBackupAge(latest.createdAt, now) : '—',
+    status: latest?.status === 'success' ? 'ok' : latest ? 'failed' : 'unknown',
+  }
+}
+
+function ConnectedDatabasesCard({ databases, backups, selectedId, onSelect }) {
+  const rows = databases.map((db) => getRow(db, backups))
 
   return (
     <Card
