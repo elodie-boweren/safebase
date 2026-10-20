@@ -69,7 +69,9 @@ frontend/
 
 | Path          | Page            |
 | ------------- | --------------- |
-| `/`           | Home            |
+| `/`              | Connexion          |
+| `/inscription`   | Inscription        |
+| `/home`       | Home            |
 | `/databases`  | Databases        |
 | `/backups`    | Backups         |
 | `/schedules`  | Schedules       |
