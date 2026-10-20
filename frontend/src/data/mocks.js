@@ -117,11 +117,29 @@ export const backups = [
 ]
 
 export const scheduleFrequencies = [
+  { value: 'none', label: 'Aucune' },
   { value: 'daily', label: 'Tous les jours' },
   { value: 'weekly', label: 'Toutes les semaines' },
   { value: 'monthly', label: 'Tous les mois' },
-  { value: 'none', label: 'Aucune' },
 ]
+
+export const scheduleWeekdays = [
+  { value: '1', label: 'Lundi' },
+  { value: '2', label: 'Mardi' },
+  { value: '3', label: 'Mercredi' },
+  { value: '4', label: 'Jeudi' },
+  { value: '5', label: 'Vendredi' },
+  { value: '6', label: 'Samedi' },
+  { value: '0', label: 'Dimanche' },
+]
+
+export const scheduleMonthDays = Array.from({ length: 28 }, (_, index) => {
+  const day = index + 1
+  return {
+    value: String(day),
+    label: `${day}`,
+  }
+})
 
 export const scheduleHours = Array.from({ length: 24 }, (_, hour) => ({
   value: String(hour),
@@ -135,8 +153,35 @@ export const scheduleMinutes = ['00', '15', '30', '45'].map((minute) => ({
 
 export const defaultSchedule = {
   frequency: 'daily',
+  weekday: '1',
+  monthDay: '1',
   hour: '14',
   minute: '00',
+}
+
+export function formatScheduleSummary(schedule) {
+  const hourLabel = `${String(schedule.hour).padStart(2, '0')}h${schedule.minute}`
+
+  if (schedule.frequency === 'none') {
+    return 'Aucune sauvegarde planifiée'
+  }
+
+  if (schedule.frequency === 'daily') {
+    return `Tous les jours à ${hourLabel}`
+  }
+
+  if (schedule.frequency === 'weekly') {
+    const weekday =
+      scheduleWeekdays.find((day) => day.value === schedule.weekday)?.label ??
+      'Lundi'
+    return `Chaque ${weekday.toLowerCase()} à ${hourLabel}`
+  }
+
+  if (schedule.frequency === 'monthly') {
+    return `Le ${schedule.monthDay} de chaque mois à ${hourLabel}`
+  }
+
+  return ''
 }
 
 export const alerts = [

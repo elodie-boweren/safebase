@@ -23,6 +23,7 @@ function SelectedDatabasesCard({
   onDisconnect,
   onDeleteBackup,
   onDownloadBackup,
+  onRestoreBackup,
 }) {
   const [confirm, setConfirm] = useState(null)
 
@@ -39,6 +40,14 @@ function SelectedDatabasesCard({
       onDeleteBackup?.(confirm.backup.id)
     }
 
+    if (confirm?.type === 'download-backup') {
+      onDownloadBackup?.(confirm.backup)
+    }
+
+    if (confirm?.type === 'restore-backup') {
+      onRestoreBackup?.(confirm.backup)
+    }
+
     closeConfirm()
   }
 
@@ -46,6 +55,24 @@ function SelectedDatabasesCard({
     <>
       <span className="confirm-modal__danger">Supprimer</span>
       {' '}la version du{' '}
+      <strong>{formatBackupDate(confirm.backup.createdAt)}</strong>
+      {' '}de la base{' '}
+      <strong>{database.name}</strong> ?
+    </>
+  ) : null
+
+  const downloadTitle = confirm?.type === 'download-backup' && database ? (
+    <>
+      Télécharger la version du{' '}
+      <strong>{formatBackupDate(confirm.backup.createdAt)}</strong>
+      {' '}de la base{' '}
+      <strong>{database.name}</strong> ?
+    </>
+  ) : null
+
+  const restoreTitle = confirm?.type === 'restore-backup' && database ? (
+    <>
+      Restaurer la version du{' '}
       <strong>{formatBackupDate(confirm.backup.createdAt)}</strong>
       {' '}de la base{' '}
       <strong>{database.name}</strong> ?
@@ -101,36 +128,58 @@ function SelectedDatabasesCard({
                   </tr>
                 </thead>
                 <tbody>
-                  {versions.map((backup) => (
-                    <tr key={backup.id}>
-                      <td>{formatBackupDate(backup.createdAt)}</td>
-                      <td>{backup.size}</td>
-                      <td>{formatBackupStatus(backup.status)}</td>
-                      <td>
-                        <div className="action-row">
-                          <IconButton
-                            label="Télécharger"
-                            tone="teal"
-                            onClick={() => onDownloadBackup?.(backup)}
-                          >
-                            <DownloadIcon />
-                          </IconButton>
-                          <IconButton label="Restaurer" tone="teal">
-                            <RestoreIcon />
-                          </IconButton>
-                          <IconButton
-                            label="Supprimer"
-                            tone="danger"
-                            onClick={() =>
-                              setConfirm({ type: 'delete-backup', backup })
-                            }
-                          >
-                            <TrashIcon />
-                          </IconButton>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {versions.map((backup) => {
+                    const canTransfer = backup.status === 'success'
+
+                    return (
+                      <tr key={backup.id}>
+                        <td>{formatBackupDate(backup.createdAt)}</td>
+                        <td>{backup.size}</td>
+                        <td>{formatBackupStatus(backup.status)}</td>
+                        <td>
+                          <div className="action-row">
+                            {canTransfer ? (
+                              <>
+                                <IconButton
+                                  label="Télécharger"
+                                  tone="teal"
+                                  onClick={() =>
+                                    setConfirm({
+                                      type: 'download-backup',
+                                      backup,
+                                    })
+                                  }
+                                >
+                                  <DownloadIcon />
+                                </IconButton>
+                                <IconButton
+                                  label="Restaurer"
+                                  tone="teal"
+                                  onClick={() =>
+                                    setConfirm({
+                                      type: 'restore-backup',
+                                      backup,
+                                    })
+                                  }
+                                >
+                                  <RestoreIcon />
+                                </IconButton>
+                              </>
+                            ) : null}
+                            <IconButton
+                              label="Supprimer"
+                              tone="danger"
+                              onClick={() =>
+                                setConfirm({ type: 'delete-backup', backup })
+                              }
+                            >
+                              <TrashIcon />
+                            </IconButton>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -139,23 +188,32 @@ function SelectedDatabasesCard({
       </Card>
 
       <ConfirmModal
+        open={confirm?.type === 'download-backup'}
+        title={downloadTitle}
+        confirmLabel="Télécharger"
+        confirmVariant="primary"
+        onCancel={closeConfirm}
+        onConfirm={handleConfirm}
+      />
+
+      <ConfirmModal
+        open={confirm?.type === 'restore-backup'}
+        title={restoreTitle}
+        confirmLabel="Restaurer"
+        confirmVariant="primary"
+        onCancel={closeConfirm}
+        onConfirm={handleConfirm}
+      />
+
+      <ConfirmModal
         open={confirm?.type === 'delete-backup'}
         title={deleteTitle}
         description={
           <>
             Cette action est irréversible.
             <br />
-            Assurez-vous d&apos;avoir{' '}
-            <button
-              type="button"
-              className="confirm-modal__link"
-              onClick={() => {
-                onDownloadBackup?.(confirm.backup)
-              }}
-            >
-              téléchargé
-            </button>{' '}
-            la version avant de la supprimer.
+            Assurez-vous d&apos;avoir téléchargé la version avant de la
+            supprimer.
           </>
         }
         confirmLabel="Supprimer"

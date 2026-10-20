@@ -41,6 +41,11 @@ function DashboardPage() {
     window.alert(`Téléchargement simulé de la version #${backup.id}`)
   }
 
+  function handleRestoreBackup(backup) {
+    // Static UI: no real restore yet
+    window.alert(`Restauration simulée de la version #${backup.id}`)
+  }
+
   return (
     <div className="dashboard">
       <ConnectedDatabasesCard
@@ -56,6 +61,7 @@ function DashboardPage() {
           onDisconnect={handleDisconnect}
           onDeleteBackup={handleDeleteBackup}
           onDownloadBackup={handleDownloadBackup}
+          onRestoreBackup={handleRestoreBackup}
         />
         <aside className="dashboard__side">
           <BackupSummaryCard />

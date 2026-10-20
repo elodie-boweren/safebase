@@ -493,6 +493,14 @@ button {
   font-size: 0.9rem;
 }
 
+.schedule-form__summary {
+  margin: 0;
+  padding-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .select-field {
   display: block;
   min-width: 0;

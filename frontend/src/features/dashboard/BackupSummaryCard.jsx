@@ -3,13 +3,17 @@ import Card from '../../components/Card'
 import Select from '../../components/Select'
 import {
   defaultSchedule,
+  formatScheduleSummary,
   scheduleFrequencies,
   scheduleHours,
   scheduleMinutes,
+  scheduleMonthDays,
+  scheduleWeekdays,
 } from '../../data/mocks'
 
 function BackupSummaryCard() {
   const [schedule, setSchedule] = useState(defaultSchedule)
+  const isEnabled = schedule.frequency !== 'none'
 
   function updateField(field) {
     return (event) => {
@@ -26,21 +30,44 @@ function BackupSummaryCard() {
           onChange={updateField('frequency')}
           options={scheduleFrequencies}
         />
-        <div className="schedule-form__time">
-          <span className="schedule-form__prefix">à</span>
+
+        {schedule.frequency === 'weekly' ? (
           <Select
-            label="Heure"
-            value={schedule.hour}
-            onChange={updateField('hour')}
-            options={scheduleHours}
+            label="Jour de la semaine"
+            value={schedule.weekday}
+            onChange={updateField('weekday')}
+            options={scheduleWeekdays}
           />
+        ) : null}
+
+        {schedule.frequency === 'monthly' ? (
           <Select
-            label="Minutes"
-            value={schedule.minute}
-            onChange={updateField('minute')}
-            options={scheduleMinutes}
+            label="Jour du mois"
+            value={schedule.monthDay}
+            onChange={updateField('monthDay')}
+            options={scheduleMonthDays}
           />
-        </div>
+        ) : null}
+
+        {isEnabled ? (
+          <div className="schedule-form__time">
+            <span className="schedule-form__prefix">à</span>
+            <Select
+              label="Heure"
+              value={schedule.hour}
+              onChange={updateField('hour')}
+              options={scheduleHours}
+            />
+            <Select
+              label="Minutes"
+              value={schedule.minute}
+              onChange={updateField('minute')}
+              options={scheduleMinutes}
+            />
+          </div>
+        ) : null}
+
+        <p className="schedule-form__summary">{formatScheduleSummary(schedule)}</p>
       </div>
     </Card>
   )

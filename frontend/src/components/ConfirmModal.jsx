@@ -7,6 +7,8 @@ function ConfirmModal({
   description,
   confirmLabel = 'Confirmer',
   cancelLabel = 'Retour',
+  confirmVariant = 'danger',
+  cancelVariant = 'outline',
   onConfirm,
   onCancel,
 }) {
@@ -54,10 +56,10 @@ function ConfirmModal({
           </div>
         ) : null}
         <div className="confirm-modal__actions">
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant={cancelVariant} onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button variant="danger" onClick={onConfirm}>
+          <Button variant={confirmVariant} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>
