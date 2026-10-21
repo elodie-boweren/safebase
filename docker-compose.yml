@@ -26,6 +26,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
   mongodb:
     image: mongo:7
@@ -42,12 +43,13 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ./api
       dockerfile: Dockerfile
     container_name: safebase_backend
     restart: unless-stopped
     environment:
       PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-safebase_secret_key}
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DATABASE: demo_mysql
