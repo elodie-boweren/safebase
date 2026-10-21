@@ -308,7 +308,7 @@ To stop the containers :
 This command does not remove any volume data.
 
 **Note for local development :** 
-If the backend must be executed directly on the computer, outside of Docker, for development purposes, you will need to install Node.js, then run `npm install` in the backend folder, beofre running `npm start`. 
+If the backend must be executed directly on the computer, outside of Docker, for development purposes, you will need to install Node.js, then run `npm install` in the `api` folder, before running `npm start` (or `npm run dev` for auto-reload with nodemon). 
 
 ---
 

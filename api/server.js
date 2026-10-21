@@ -1,9 +1,9 @@
 const express = require('express');
 const app = express();
 app.use(express.json());
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'safebase_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'safebase_secret_key';
 const { encrypt } = require('./encryption');
 
 function authMiddleware(req, res, next) {
@@ -28,6 +28,10 @@ const bcrypt = require('bcryptjs');
 
 app.get('/', (req, res) => {
   res.send('SafeBase API is running');
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', service: 'safebase-backend' });
 });
 
 app.get('/test-db', async (req, res) => {
@@ -146,6 +150,6 @@ app.delete('/databases/:id', authMiddleware, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`API démarrée sur http://localhost:${PORT}`);
 });

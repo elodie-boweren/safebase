@@ -43,12 +43,13 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ./api
       dockerfile: Dockerfile
     container_name: safebase_backend
     restart: unless-stopped
     environment:
       PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-safebase_secret_key}
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DATABASE: demo_mysql
