@@ -9,7 +9,7 @@ import {
   DownloadIcon,
   RestoreIcon,
   TrashIcon,
-  DisconnectIcon,
+  LogoutIcon,
 } from '../../components/icons/Icons'
 import {
   formatBackupDate,
@@ -109,9 +109,11 @@ function SelectedDatabasesCard({
               </div>
               <IconButton
                 label="Déconnecter la base"
+                tone="danger"
+                className="selected-db__disconnect"
                 onClick={() => setConfirm({ type: 'disconnect' })}
               >
-                <DisconnectIcon />
+                <LogoutIcon />
               </IconButton>
             </div>
 

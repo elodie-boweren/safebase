@@ -424,11 +424,17 @@ button {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem 0.75rem;
+  min-width: 0;
 }
 
 .selected-db__host {
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+.selected-db__disconnect {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .selected-db__subtitle {
