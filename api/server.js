@@ -5,6 +5,23 @@ const PORT = 3000;
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = 'safebase_secret_key';
 
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token manquant' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Token invalide ou expiré' });
+  }
+}
+
 const pool = require('./db');
 const bcrypt = require('bcryptjs');
 
@@ -66,6 +83,10 @@ app.post('/auth/login', async (req, res) => {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
+});
+
+app.get('/me', authMiddleware, (req, res) => {
+  res.json({ message: 'Tu es connecté.e', user: req.user });
 });
 
 app.listen(PORT, () => {
