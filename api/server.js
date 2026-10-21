@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 const PORT = 3000;
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = 'safebase_secret_key';
 
 const pool = require('./db');
 const bcrypt = require('bcryptjs');
@@ -53,7 +55,13 @@ app.post('/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Identifiants invalides' });
     }
 
-    res.json({ user_id: user.user_id, username: user.username, email: user.email, role: user.role });
+    const token = jwt.sign(
+      { user_id: user.user_id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ token, user: { user_id: user.user_id, username: user.username, email: user.email, role: user.role } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
