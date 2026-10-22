@@ -134,29 +134,20 @@ The overall architecture is structured around the following components:
 └─────────────┘  └─────────────┘    └─────────────┘
 ```
 
-The final architecture and the detailed organization of the application layers will be documented as the project evolves.
-
 ---
 
 ## Technologies
 
-The final technology stack will be defined during the design phase of the project.
-
-The project requirements include:
-
-* a **REST API** developped with **Node.js**
-* a **React** frontend application
+* a **REST API** developed with **Node.js 22** and **Express**
+* a **React** frontend application built with **Vite**
 * **MySQL**
-* **PostgreSQL**
+* **PostgreSQL** (also used as the application's own database)
 * **MongoDB**
-* **Docker**
+* **Docker** / **Docker Compose**
+* **JWT** for authentication
 * **cron** for scheduled operations
 * native MySQL, MongoDB and PostgreSQL backup utilities
 * automated testing tools
-
-### API Framework
-
-The project backend using Node.js, the best suited REST API framework is **Fastify**, a fast web framework for Node.js: `https://fastify.dev/`.
 
 ---
 
@@ -176,21 +167,17 @@ Restore operations will use the appropriate tools for each database system.
 
 ## Containerization
 
-The application is designed to be fully containerized using **Docker**.
+The backend and the databases run with **Docker Compose**. The frontend currently runs locally with Vite (it is not containerized yet).
 
-The environment will include:
+| Service (`docker-compose.yml`) | Container           | Port    |
+| ------------------------------ | ------------------- | ------- |
+| `backend` (built from `api/`)  | `safebase_backend`  | `3000`  |
+| `postgres`                     | `safebase_postgres` | `5432`  |
+| `mysql`                        | `safebase_mysql`    | `3306`  |
+| `mongodb`                      | `safebase_mongo`    | `27017` |
+| Frontend (outside Docker)      | —                   | `5173`  |
 
-```text
-SafeBase
-│
-├── Frontend
-├── API
-├── MySQL
-├── PostgreSQL
-└── MongoDB
-```
-
-Docker will make it easier to reproduce the development environment and run the different components of the application consistently.
+Docker makes it easier to reproduce the development environment and run the different components of the application consistently.
 
 ---
 
@@ -261,54 +248,92 @@ Important technical decisions and source code should be properly documented.
 
 ### Prerequisites
 
-The development environment will need to support:
+* **Git**
+* **Docker Desktop** (includes Docker Compose) — see [DOCKER.md](DOCKER.md) for installation on Windows, macOS and Linux
+* **Node.js 22** (LTS) and npm — required to run the frontend
 
-* the API
-* the frontend
-* MySQL
-* PostgreSQL
-* MongoDB
-* Docker
+Ports `3000`, `3306`, `5432`, `27017` and `5173` must be free. If MySQL, PostgreSQL or MongoDB is already installed and running on your computer, stop it first, otherwise the containers will fail to start.
 
-### Clone the repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/elodie-boweren/safebase.git
 cd safebase
 ```
 
-### Install dependencies
+### 2. Environment variables
 
-This project runs through Docker. Refer to DOCKER.md to install Docker Desktop and get the project started with all required packages.
+No `.env` file is required for now: development values are already set in `docker-compose.yml`. See [.env.example](.env.example) for the variables that can be overridden.
 
+### 3. Start the backend and the databases (Docker)
 
-### Start the application
+Make sure Docker Desktop is running, then from the root of the project:
 
-Remain at the root of the project and run :
+```bash
+docker compose up --build -d
+```
 
-`docker compose up --build -d`
+This command builds the backend image from `api/Dockerfile`, installs its dependencies and starts the API, PostgreSQL, MySQL and MongoDB containers.
 
-This command builds the image of the backend from the Dockerfile, installs Node.js and other dependencies defined in the package-lock.json and runs the services set in the Docker Compose. 
+On the first start, PostgreSQL automatically creates the application tables from [db/schema.sql](db/schema.sql).
 
-You can then check that the containers are running healthily ->
-`docker compose ps`.
+Check that the containers are running:
 
-Youcan test the API in a navigator :
+```bash
+docker compose ps
+```
 
-http://localhost:3000/api/health
+Then open http://localhost:3000/api/health in a browser: a JSON response confirms that the API is running.
 
-A JSON response will confirm that the backend is running.
+### 4. Start the frontend
 
-To check backend logs :
-`docker compose logs -f backend`
+In a second terminal:
 
-To stop the containers :
-`docker compose down`
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-This command does not remove any volume data.
+The interface is available at http://localhost:5173.
 
-**Note for local development :** 
-If the backend must be executed directly on the computer, outside of Docker, for development purposes, you will need to install Node.js, then run `npm install` in the `api` folder, before running `npm start` (or `npm run dev` for auto-reload with nodemon). 
+For now the frontend uses mock data (`frontend/src/data/mocks.js`). Demo login: `emma@safebase.dev` / `safebase123`.
+
+### Useful commands
+
+| Command                           | Description                                                  |
+| --------------------------------- | ------------------------------------------------------------ |
+| `docker compose ps`               | List the containers and their state                          |
+| `docker compose logs -f backend`  | Follow the API logs                                          |
+| `docker compose up --build -d`    | Rebuild the API after a change in `api/` (e.g. new package)  |
+| `docker compose down`             | Stop the containers (data is kept)                           |
+| `docker compose down -v`          | Stop the containers **and delete all database data**         |
+
+### Troubleshooting
+
+**Tables are missing / database schema is outdated**
+`db/schema.sql` is only executed when the PostgreSQL volume is created for the first time. If you started the project before the schema existed or changed, reset the volumes (this deletes all local data):
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+**A container fails to start with "port is already allocated"**
+Another program is using that port (often a local MySQL or PostgreSQL). Stop it and run `docker compose up -d` again.
+
+### Running the API outside Docker (optional)
+
+To run the API directly on your computer (e.g. for auto-reload), keep the database containers running, then:
+
+```bash
+docker compose stop backend
+cd api
+npm install
+npm run dev
+```
+
+The API connects to PostgreSQL on `localhost:5432` with the default development credentials.
 
 ---
 
@@ -328,30 +353,31 @@ Once the application is running, users will be able to:
 
 ## 📁 Project Structure
 
-The structure of the project will be as follows: 
-
-`
-plateforme-safebase/
+```text
+safebase/
 │
-├── api/
+├── api/                  # REST API (Node.js / Express)
+│   ├── Dockerfile
+│   ├── server.js         # routes and server entry point
+│   ├── db.js             # PostgreSQL connection pool
+│   └── encryption.js     # encryption of stored DB passwords
+│
+├── frontend/             # React application (Vite)
 │   ├── src/
 │   └── tests/
 │
-├── frontend/
-│   ├── src/
-│   └── tests/
-│
-├── docker/
+├── db/
+│   └── schema.sql        # application schema, loaded on first PostgreSQL start
 │
 ├── docs/
-│   ├── architecture/
-│   ├── database/
-│   └── tests/
+│   ├── database/         # MCD / MLD / MPD
+│   └── testings/         # test plan, Postman collection
 │
 ├── docker-compose.yml
-├── README.md
-└── ...
-`
+├── DOCKER.md
+├── .env.example
+└── README.md
+```
 
 ---
 
@@ -363,13 +389,13 @@ The project is developed collaboratively using project management and version co
 
 Development is carried out on dedicated branches and integrated through Pull Requests.
 
-`
+```text
 main
  │
  ├── feature/...
  ├── fix/...
  └── ...
-`
+```
 
 ### Trello
 
@@ -377,9 +403,9 @@ Project tasks are managed using a Kanban board.
 
 The workflow is organized into the following stages:
 
-`
+```text
 BACKLOG → TODO → ONGOING → CODE REVIEW → TEST → DONE
-`
+```
 
 Labels are used to identify the technical area of each task:
 
