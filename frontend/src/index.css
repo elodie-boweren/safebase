@@ -90,12 +90,12 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.55rem 1.1rem;
+  gap: 0.4rem;
+  padding: 0.45rem 0.95rem;
   border: 0;
   border-radius: 999px;
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -153,7 +153,7 @@ button {
   background: var(--surface);
   border-radius: 1.25rem;
   box-shadow: var(--shadow);
-  padding: clamp(1rem, 2vw, 1.35rem);
+  padding: clamp(0.6rem, 1.2vw, 0.8rem) clamp(1rem, 2vw, 1.35rem) clamp(1rem, 2vw, 1.35rem);
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -168,8 +168,8 @@ button {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
-  margin-bottom: 1rem;
+  gap: 0.4rem 1rem;
+  margin-bottom: 0.4rem;
   flex-shrink: 0;
 }
 
@@ -180,8 +180,10 @@ button {
 }
 
 .card__title {
-  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  margin: 0;
+  font-size: clamp(0.95rem, 1.6vw, 1.05rem);
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .card__body {
@@ -280,14 +282,110 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: clamp(1rem, 2.5vw, 1.5rem) clamp(1rem, 4vw, 2.5rem);
+  padding: clamp(0.5rem, 1.2vw, 0.75rem) clamp(1rem, 4vw, 2.5rem);
   background: var(--surface);
   box-shadow: 0 0.1rem 0.6rem rgba(0, 0, 0, 0.05);
 }
 
 .navbar__brand {
   text-decoration: none;
-  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1.25rem);
+}
+
+.alerts-dropdown {
+  position: relative;
+}
+
+.alerts-dropdown__toggle {
+  position: relative;
+  display: inline-flex;
+  padding: 0.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.alerts-dropdown__toggle:hover,
+.alerts-dropdown__toggle[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--brand-teal) 10%, white);
+  color: var(--brand-teal);
+}
+
+.alerts-dropdown__toggle:focus-visible {
+  outline: 0.125rem solid color-mix(in srgb, var(--focus) 45%, white);
+  outline-offset: 0.125rem;
+}
+
+.alerts-dropdown__bubble {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+}
+
+.alerts-dropdown__panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 900;
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: min(70vh, 28rem);
+  overflow-y: auto;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow), 0 0 0 0.06rem var(--border);
+}
+
+.alerts-dropdown__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.95rem;
+}
+
+.alerts-dropdown__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand-teal);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.alerts-dropdown__link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.alerts-dropdown__link:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.alert-feed__content .alerts-dropdown__link {
+  margin-top: 0.3rem;
 }
 
 .app-shell__main {
@@ -311,8 +409,8 @@ button {
 }
 
 .dashboard > .card {
-  flex: 0 1 38%;
-  max-height: 42%;
+  flex: 0 1 50%;
+  max-height: 55%;
 }
 
 .dashboard__bottom {
@@ -507,6 +605,12 @@ button {
   font-weight: 600;
 }
 
+.schedule-form__pending {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--brand-teal);
+}
+
 .select-field {
   display: block;
   min-width: 0;
@@ -635,6 +739,26 @@ button {
 .alert-feed__icon {
   color: var(--danger);
   margin-top: 0.1rem;
+}
+
+.alert-feed__item--read {
+  background: #f3f5f6;
+}
+
+.alert-feed__item--read .alert-feed__icon,
+.alert-feed__item--read .alert-feed__message {
+  color: var(--text-muted);
+}
+
+.alert-feed__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-feed__details {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text);
 }
 
 .alert-feed__message {
@@ -798,7 +922,7 @@ button {
 
   .dashboard > .card {
     flex: none;
-    max-height: min(50vh, 28rem);
+    max-height: min(65vh, 36rem);
   }
 
   .dashboard__bottom {
@@ -811,4 +935,85 @@ button {
     max-height: min(50vh, 28rem);
     height: auto;
   }
+}
+
+/* Mobile: buttons with an icon only show the icon */
+@media (max-width: 40rem) {
+
+  .btn--with-icon {
+    padding: 0.55rem;
+  }
+
+  .btn--with-icon .btn__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Add database form */
+
+/* Title and buttons stay in place, only the fields scroll inside the popup */
+.database-form {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 32rem);
+  max-height: calc(100dvh - 2 * clamp(1rem, 4vw, 2rem));
+  overflow: hidden;
+  text-align: left;
+}
+
+.database-form__body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.database-form__body .confirm-modal__actions {
+  flex-shrink: 0;
+}
+
+.database-form .confirm-modal__title {
+  text-align: center;
+}
+
+.database-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-height: 0;
+  margin-bottom: 1.25rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.2rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.database-form__row {
+  display: grid;
+  grid-template-columns: 1fr 7rem;
+  gap: 0.75rem;
+}
+
+.database-form .select-field select {
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  font-weight: 400;
+}
+
+.database-form__error {
+  margin-bottom: 1.25rem;
+}
+
+.dashboard__error {
+  margin: 0 0 1rem;
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 600;
 }

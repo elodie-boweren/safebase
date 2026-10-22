@@ -7,7 +7,7 @@ function Button({
   className = '',
   ...props
 }) {
-  const classes = ['btn', `btn--${variant}`, className].filter(Boolean).join(' ')
+  const classes = ['btn', `btn--${variant}`, icon ? 'btn--with-icon' : '', className].filter(Boolean).join(' ')
 
   return (
     <button type={type} className={classes} {...props}>

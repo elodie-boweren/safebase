@@ -5,27 +5,24 @@ import StatusIcon from '../../components/StatusIcon'
 import { PlusIcon } from '../../components/icons/Icons'
 import { formatBackupAge } from '../../data/mocks'
 
-function getRow(database, backups, now = new Date()) {
-  const latest =
-    backups
-      .filter((backup) => backup.databaseId === database.id)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0] ?? null
+function getRow(database, now = new Date()) {
+  const { lastBackupAt, lastBackupStatus } = database
 
   return {
     ...database,
-    lastBackup: latest ? formatBackupAge(latest.createdAt, now) : '—',
-    status: latest?.status === 'success' ? 'ok' : latest ? 'failed' : 'unknown',
+    lastBackup: lastBackupAt ? formatBackupAge(lastBackupAt, now) : '—',
+    status: lastBackupStatus === 'success' ? 'ok' : lastBackupStatus ? 'failed' : 'unknown',
   }
 }
 
-function ConnectedDatabasesCard({ databases, backups, selectedId, onSelect }) {
-  const rows = databases.map((db) => getRow(db, backups))
+function ConnectedDatabasesCard({ databases, selectedId, onSelect, onAdd }) {
+  const rows = databases.map((db) => getRow(db))
 
   return (
     <Card
       title="Bases connectées"
       action={
-        <Button variant="primary" icon={<PlusIcon />}>
+        <Button variant="primary" icon={<PlusIcon />} onClick={onAdd}>
           Ajouter une base
         </Button>
       }
@@ -41,6 +38,11 @@ function ConnectedDatabasesCard({ databases, backups, selectedId, onSelect }) {
             </tr>
           </thead>
           <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={4}>Aucune base connectée pour le moment.</td>
+              </tr>
+            ) : null}
             {rows.map((db) => {
               const isSelected = selectedId === db.id
 
@@ -64,7 +66,7 @@ function ConnectedDatabasesCard({ databases, backups, selectedId, onSelect }) {
                   </td>
                   <td>{db.lastBackup}</td>
                   <td>
-                    <StatusIcon status={db.status} />
+                    {db.status === 'unknown' ? '—' : <StatusIcon status={db.status} />}
                   </td>
                 </tr>
               )

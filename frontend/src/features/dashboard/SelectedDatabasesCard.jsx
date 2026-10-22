@@ -24,6 +24,8 @@ function SelectedDatabasesCard({
   onDeleteBackup,
   onDownloadBackup,
   onRestoreBackup,
+  onBackup,
+  backingUp = false,
 }) {
   const [confirm, setConfirm] = useState(null)
 
@@ -92,8 +94,13 @@ function SelectedDatabasesCard({
         className="card--fill"
         title="Bases sélectionnée"
         action={
-          <Button variant="primary" icon={<DownloadIcon />} disabled={!database}>
-            Sauvegarder maintenant
+          <Button
+            variant="primary"
+            icon={<DownloadIcon />}
+            disabled={!database || backingUp}
+            onClick={() => onBackup?.(database.id)}
+          >
+            {backingUp ? 'Sauvegarde en cours…' : 'Sauvegarder maintenant'}
           </Button>
         }
       >
@@ -137,7 +144,7 @@ function SelectedDatabasesCard({
                       <tr key={backup.id}>
                         <td>{formatBackupDate(backup.createdAt)}</td>
                         <td>{backup.size}</td>
-                        <td>{formatBackupStatus(backup.status)}</td>
+                        <td title={backup.error ?? undefined}>{formatBackupStatus(backup.status)}</td>
                         <td>
                           <div className="action-row">
                             {canTransfer ? (
