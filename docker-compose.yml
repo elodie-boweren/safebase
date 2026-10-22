@@ -13,6 +13,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./db/seeds/mysql/01_test_databases.sql:/docker-entrypoint-initdb.d/01_test_databases.sql
 
   postgres:
     image: postgres:16
@@ -27,6 +28,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./db/seeds/postgres/01_test_databases.sql:/docker-entrypoint-initdb.d/01_test_databases.sql
 
   mongodb:
     image: mongo:7
@@ -65,8 +67,12 @@ services:
       MONGO_DATABASE: demo_mongo
       MONGO_USER: safebase
       MONGO_PASSWORD: safebasepass
+      BACKUP_DIR: /app/backups
     ports:
       - "3000:3000"
+    volumes:
+      # backup files are written in ./backups on your computer
+      - ./backups:/app/backups
     depends_on:
       - mysql
       - postgres
