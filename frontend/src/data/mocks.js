@@ -117,11 +117,17 @@ export const backups = [
 ]
 
 export const scheduleFrequencies = [
-  { value: 'none', label: 'Aucune' },
   { value: 'daily', label: 'Tous les jours' },
   { value: 'weekly', label: 'Toutes les semaines' },
   { value: 'monthly', label: 'Tous les mois' },
+  { value: 'interval', label: 'Toutes les X heures' },
 ]
+
+// same values as the API accepts (api/scheduler.js)
+export const scheduleIntervals = [1, 2, 3, 4, 6, 8, 12].map((hours) => ({
+  value: String(hours),
+  label: hours === 1 ? 'Toutes les heures' : `Toutes les ${hours} heures`,
+}))
 
 export const scheduleWeekdays = [
   { value: '1', label: 'Lundi' },
@@ -157,13 +163,17 @@ export const defaultSchedule = {
   monthDay: '1',
   hour: '14',
   minute: '00',
+  intervalHours: '6',
+  enabled: false,
 }
 
 export function formatScheduleSummary(schedule) {
   const hourLabel = `${String(schedule.hour).padStart(2, '0')}h${schedule.minute}`
 
-  if (schedule.frequency === 'none') {
-    return 'Aucune sauvegarde planifiée'
+  if (schedule.frequency === 'interval') {
+    const hours = Number(schedule.intervalHours)
+    const every = hours === 1 ? 'Toutes les heures' : `Toutes les ${hours} heures`
+    return `${every}, à la minute ${schedule.minute}`
   }
 
   if (schedule.frequency === 'daily') {
@@ -268,9 +278,10 @@ export function formatBackupDate(isoDate) {
   const date = new Date(isoDate)
   const day = String(date.getDate()).padStart(2, '0')
   const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = String(date.getFullYear()).slice(-2)
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${day}/${month} ${hours}:${minutes}`
+  return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
 export function formatHost(database) {
@@ -278,9 +289,9 @@ export function formatHost(database) {
 }
 
 export function formatBackupStatus(status) {
-  if (status === 'success') return 'succès'
-  if (status === 'failed') return 'échec'
-  if (status === 'running') return 'en cours'
+  if (status === 'success') return 'Réussie'
+  if (status === 'failed') return 'Échec'
+  if (status === 'running') return 'En cours'
   return status
 }
 

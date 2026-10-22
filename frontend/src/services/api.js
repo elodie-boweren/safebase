@@ -36,7 +36,7 @@ export function setToken(token) {
  * @param {RequestInit} [options]
  * @returns {Promise<any>}
  */
-export async function apiRequest(path, options = {}) {
+export async function apiRequest(path, { raw = false, ...options } = {}) {
   const token = getToken()
 
   let response
@@ -51,6 +51,11 @@ export async function apiRequest(path, options = {}) {
     })
   } catch {
     throw new ApiError("Impossible de joindre l'API. Est-elle démarrée ?", 0)
+  }
+
+  // raw: return the file content (e.g. a backup download) instead of parsed JSON
+  if (raw && response.ok) {
+    return response.blob()
   }
 
   const isJson = response.headers.get('content-type')?.includes('application/json')
@@ -107,6 +112,45 @@ export function createBackup(databaseId) {
 
 export function getBackups(databaseId) {
   return apiRequest(`/databases/${databaseId}/backups`)
+}
+
+export async function downloadBackup(backup) {
+  const blob = await apiRequest(`/backups/${backup.id}/download`, { raw: true })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = backup.filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
+export function restoreBackup(backupId) {
+  return apiRequest(`/backups/${backupId}/restore`, { method: 'POST' })
+}
+
+export function deleteBackup(backupId) {
+  return apiRequest(`/backups/${backupId}`, { method: 'DELETE' })
+}
+
+export function updateSchedule(databaseId, schedule) {
+  return apiRequest(`/databases/${databaseId}/schedule`, {
+    method: 'PUT',
+    body: JSON.stringify(schedule),
+  })
+}
+
+export function getAlerts() {
+  return apiRequest('/alerts')
+}
+
+export function markAlertRead(alertId) {
+  return apiRequest(`/alerts/${alertId}/read`, { method: 'PATCH' })
+}
+
+export function markAllAlertsRead() {
+  return apiRequest('/alerts/read', { method: 'PATCH' })
 }
 
 export { API_BASE_URL }

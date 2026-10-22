@@ -5,7 +5,19 @@ import SelectedDatabasesCard from '../features/dashboard/SelectedDatabasesCard'
 import BackupSummaryCard from '../features/dashboard/BackupSummaryCard'
 import AddDatabaseModal from '../features/databases/AddDatabaseModal'
 import ConfirmModal from '../components/ConfirmModal'
-import { createBackup, deleteDatabase, getBackups, getDatabases, logout } from '../services/api'
+import {
+  createBackup,
+  deleteBackup,
+  deleteDatabase,
+  downloadBackup,
+  getBackups,
+  getDatabases,
+  logout,
+  restoreBackup,
+  updateSchedule,
+} from '../services/api'
+import { defaultSchedule } from '../data/mocks'
+import { useAlerts } from '../features/alerts/alertsContext'
 
 const TYPE_LABELS = {
   mysql: 'MySQL',
@@ -25,6 +37,8 @@ function toDatabase(row) {
     databaseName: row.database_name,
     lastBackupAt: row.last_backup_at ?? null,
     lastBackupStatus: row.last_backup_status ?? null,
+    // form values of the saved schedule (API cron -> fields)
+    schedule: { ...defaultSchedule, ...row.schedule, enabled: Boolean(row.is_schedule_enabled) },
   }
 }
 
@@ -38,26 +52,28 @@ function formatSize(bytes) {
 function toBackup(row) {
   return {
     id: row.backup_id,
+    version: row.version,
     databaseId: row.database_id,
     createdAt: row.created_at,
     size: formatSize(Number(row.size)),
     status: row.status,
     filename: row.filename,
-    error: row.status === 'failed' ? row.description : null,
+    triggerType: row.trigger_type,
+    error: row.error_message ?? null,
   }
 }
 
 function DashboardPage() {
   const navigate = useNavigate()
+  const { refresh: refreshAlerts } = useAlerts()
   const [databases, setDatabases] = useState([])
   const [backups, setBackups] = useState([])
   const [backingUp, setBackingUp] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [forceDelete, setForceDelete] = useState(null)
-  // no schedules API yet: confirmed schedules are kept per database in memory
-  const [schedules, setSchedules] = useState({})
 
   const handleApiError = useCallback(
     (err) => {
@@ -89,8 +105,24 @@ function DashboardPage() {
       .catch(handleApiError)
   }, [selectedId, handleApiError])
 
+  async function handleSaveSchedule(databaseId, schedule) {
+    setError('')
+    setNotice('')
+    try {
+      const saved = await updateSchedule(databaseId, schedule)
+      refreshAlerts()
+      const savedSchedule = { ...defaultSchedule, ...saved.schedule, enabled: saved.is_schedule_enabled }
+      setDatabases((prev) =>
+        prev.map((db) => (db.id === databaseId ? { ...db, schedule: savedSchedule } : db)),
+      )
+    } catch (err) {
+      handleApiError(err)
+    }
+  }
+
   async function handleBackup(databaseId) {
     setError('')
+    setNotice('')
     setBackingUp(true)
     try {
       await createBackup(databaseId)
@@ -100,7 +132,8 @@ function DashboardPage() {
       setBackingUp(false)
     }
 
-    // refresh the versions and the "last backup" column, whatever the result
+    // refresh the versions, the "last backup" column and the alerts, whatever the result
+    refreshAlerts()
     try {
       const [backupRows, databaseRows] = await Promise.all([getBackups(databaseId), getDatabases()])
       setDatabases(databaseRows.map(toDatabase))
@@ -124,6 +157,7 @@ function DashboardPage() {
   )
 
   function handleCreated(row) {
+    refreshAlerts()
     const database = toDatabase(row)
     setDatabases((prev) => [...prev, database])
     setSelectedId(database.id)
@@ -141,6 +175,7 @@ function DashboardPage() {
     try {
       await deleteDatabase(databaseId, { force })
       removeDatabase(databaseId)
+      refreshAlerts()
     } catch (err) {
       // the database has backups: ask for a second confirmation
       if (err.status === 409) {
@@ -157,18 +192,53 @@ function DashboardPage() {
     await handleDisconnect(databaseId, { force: true })
   }
 
-  function handleDeleteBackup(backupId) {
-    setBackups((prev) => prev.filter((backup) => backup.id !== backupId))
+  async function handleDeleteBackup(backupId) {
+    setError('')
+    setNotice('')
+    try {
+      await deleteBackup(backupId)
+      setBackups((prev) => prev.filter((backup) => backup.id !== backupId))
+      refreshAlerts()
+      // the "last backup" column may change
+      const rows = await getDatabases()
+      setDatabases(rows.map(toDatabase))
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
-  function handleDownloadBackup(backup) {
-    // Static UI: no real file download yet
-    window.alert(`Téléchargement simulé de la version #${backup.id}`)
+  async function handleDownloadBackup(backup) {
+    setError('')
+    try {
+      await downloadBackup(backup)
+      refreshAlerts()
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
-  function handleRestoreBackup(backup) {
-    // Static UI: no real restore yet
-    window.alert(`Restauration simulée de la version #${backup.id}`)
+  async function handleRestoreBackup(backup) {
+    setError('')
+    setNotice(`Sauvegarde de sécurité puis restauration de la version v${backup.version} en cours…`)
+    try {
+      await restoreBackup(backup.id)
+      setNotice(
+        `La version v${backup.version} a été restaurée. Les données d'avant sont gardées dans une nouvelle version « avant restauration ».`,
+      )
+    } catch (err) {
+      setNotice('')
+      handleApiError(err)
+    }
+
+    // the safety backup appears as a new version, a failure as an alert
+    refreshAlerts()
+    try {
+      const [backupRows, databaseRows] = await Promise.all([getBackups(backup.databaseId), getDatabases()])
+      setDatabases(databaseRows.map(toDatabase))
+      if (backup.databaseId === selectedId) setBackups(backupRows.map(toBackup))
+    } catch (err) {
+      handleApiError(err)
+    }
   }
 
   const forceDeleteName = databases.find((db) => db.id === forceDelete?.databaseId)?.name
@@ -176,6 +246,7 @@ function DashboardPage() {
   return (
     <div className="dashboard">
       {error ? <p className="dashboard__error" role="alert">{error}</p> : null}
+      {notice ? <p className="dashboard__notice" role="status">{notice}</p> : null}
       <ConnectedDatabasesCard
         databases={databases}
         selectedId={selectedId}
@@ -197,8 +268,8 @@ function DashboardPage() {
           <BackupSummaryCard
             key={selectedId ?? 'none'}
             database={selectedDatabase}
-            savedSchedule={schedules[selectedId]}
-            onSave={(schedule) => setSchedules((prev) => ({ ...prev, [selectedId]: schedule }))}
+            savedSchedule={selectedDatabase?.schedule}
+            onSave={(schedule) => handleSaveSchedule(selectedId, schedule)}
           />
         </aside>
       </div>
