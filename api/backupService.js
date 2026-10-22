@@ -3,10 +3,30 @@ const fs = require('fs');
 const path = require('path');
 const pool = require('./db');
 const { decrypt } = require('./encryption');
+const { logEvent } = require('./events');
+
+const TRIGGER_LABELS = {
+  manual: 'manuelle',
+  scheduled: 'automatique',
+  pre_restore: 'de sécurité',
+};
+
+function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
+}
 
 const BACKUP_DIR = process.env.BACKUP_DIR || path.join(__dirname, 'backups');
 const DUMP_TIMEOUT_MS = 10 * 60 * 1000;
 const MAX_STDERR_LENGTH = 4000;
+
+// databases with a backup in progress: a second backup of the same database is refused
+const runningBackups = new Set();
+
+function isBackupRunning(databaseId) {
+  return runningBackups.has(databaseId);
+}
 
 // Builds the dump command for each database type.
 // The password is passed through an environment variable, never in the arguments.
@@ -50,12 +70,61 @@ function buildDumpCommand(database, password, filepath) {
   throw new Error(`Type de base non supporté : ${database.type}`);
 }
 
-function runCommand({ command, args, env }) {
+// Builds the restore command for each database type (password through env vars too)
+function buildRestoreCommand(database, password, filepath) {
+  if (database.type === 'postgres') {
+    return {
+      command: 'psql',
+      args: [
+        `--host=${database.host}`,
+        `--port=${database.port}`,
+        `--username=${database.username}`,
+        `--dbname=${database.database_name}`,
+        '--quiet',
+        '--no-psqlrc',
+        // stop at the first error and roll everything back: the database is left untouched
+        '--set=ON_ERROR_STOP=1',
+        '--single-transaction',
+        `--file=${filepath}`,
+      ],
+      env: { PGPASSWORD: password },
+    };
+  }
+
+  if (database.type === 'mysql') {
+    return {
+      command: 'mariadb',
+      args: [
+        `--host=${database.host}`,
+        `--port=${database.port}`,
+        `--user=${database.username}`,
+        database.database_name,
+      ],
+      env: { MYSQL_PWD: password },
+      inputFile: filepath,
+    };
+  }
+
+  throw new Error(`Type de base non supporté : ${database.type}`);
+}
+
+function runCommand({ command, args, env, inputFile }) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       env: { ...process.env, ...env },
-      stdio: ['ignore', 'ignore', 'pipe'],
+      stdio: [inputFile ? 'pipe' : 'ignore', 'ignore', 'pipe'],
     });
+
+    if (inputFile) {
+      const input = fs.createReadStream(inputFile);
+      input.on('error', (error) => {
+        child.kill('SIGKILL');
+        reject(new Error(`Lecture du fichier impossible : ${error.message}`));
+      });
+      // the client may exit early on error: its exit code is reported below
+      child.stdin.on('error', () => {});
+      input.pipe(child.stdin);
+    }
 
     let stderr = '';
     child.stderr.on('data', (chunk) => {
@@ -64,7 +133,7 @@ function runCommand({ command, args, env }) {
 
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
-      reject(new Error('Délai de sauvegarde dépassé'));
+      reject(new Error("Délai d'exécution dépassé"));
     }, DUMP_TIMEOUT_MS);
 
     child.on('error', (error) => {
@@ -120,8 +189,13 @@ function toBackupMessage(error) {
   if (/can't connect|could not translate host|connection refused|unknown server host|timeout expired/i.test(message)) {
     return 'Serveur de base de données injoignable';
   }
-  if (/délai de sauvegarde dépassé/i.test(message)) return message;
-  return 'Erreur pendant la sauvegarde';
+  if (/délai d'exécution dépassé|lecture du fichier impossible/i.test(message)) return message;
+  return null;
+}
+
+function hasUnsafeValue(database) {
+  // values starting with "-" would be read as options by the client tools
+  return [database.host, database.username, database.database_name].some((value) => String(value).startsWith('-'));
 }
 
 function buildFilename(database) {
@@ -133,7 +207,20 @@ function buildFilename(database) {
 // Runs a backup of the database and records it in the backups table.
 // On failure, the backup is marked as failed and an alert is created.
 // Returns { backup } or { backup, error }
-async function createBackup(database, { triggerType = 'manual' } = {}) {
+async function createBackup(database, options = {}) {
+  if (runningBackups.has(database.database_id)) {
+    return { backup: null, error: 'Une sauvegarde de cette base est déjà en cours', alreadyRunning: true };
+  }
+
+  runningBackups.add(database.database_id);
+  try {
+    return await runBackup(database, options);
+  } finally {
+    runningBackups.delete(database.database_id);
+  }
+}
+
+async function runBackup(database, { triggerType = 'manual' } = {}) {
   const directory = path.join(BACKUP_DIR, String(database.database_id));
   const filename = buildFilename(database);
   const filepath = path.join(directory, filename);
@@ -147,8 +234,7 @@ async function createBackup(database, { triggerType = 'manual' } = {}) {
   const backupId = inserted.rows[0].backup_id;
 
   try {
-    // values starting with "-" would be read as options by the dump tools
-    if ([database.host, database.username, database.database_name].some((value) => String(value).startsWith('-'))) {
+    if (hasUnsafeValue(database)) {
       throw new Error('Paramètres de connexion invalides');
     }
 
@@ -164,23 +250,83 @@ async function createBackup(database, { triggerType = 'manual' } = {}) {
       `UPDATE backups SET status = 'success', size = $1 WHERE backup_id = $2 RETURNING *`,
       [size, backupId]
     );
+    await logEvent({
+      type: 'backup_success',
+      level: 'success',
+      message: `Sauvegarde ${TRIGGER_LABELS[triggerType] ?? triggerType} de ${database.name} réussie (${formatSize(size)})`,
+      database,
+      backup: updated.rows[0],
+    });
     return { backup: updated.rows[0] };
   } catch (error) {
     console.error(`Backup ${backupId} failed:`, error.message);
     await fs.promises.rm(filepath, { force: true }).catch(() => {});
 
-    const reason = toBackupMessage(error);
+    // clear reason first (shown in the versions list), then the raw tool output
+    const reason = toBackupMessage(error) ?? 'Erreur pendant la sauvegarde';
     const updated = await pool.query(
       `UPDATE backups SET status = 'failed', size = 0, description = $1 WHERE backup_id = $2 RETURNING *`,
-      [error.message, backupId]
+      [`${reason} — ${error.message}`, backupId]
     );
-    await pool.query(
-      `INSERT INTO alerts (type, message, backup_id) VALUES ('backup_failed', $1, $2)`,
-      [`Échec de la sauvegarde de ${database.name} : ${reason}`, backupId]
-    );
+    await logEvent({
+      type: 'backup_failed',
+      level: 'error',
+      message: `Échec de la sauvegarde ${TRIGGER_LABELS[triggerType] ?? triggerType} de ${database.name} : ${reason}`,
+      details: error.message,
+      database,
+      backup: updated.rows[0],
+    });
 
     return { backup: updated.rows[0], error: reason };
   }
 }
 
-module.exports = { createBackup };
+// Restores a successful backup into its database.
+// On failure, a restore_failed alert is created. Returns { ok: true } or { ok: false, error }
+async function restoreBackup(database, backup) {
+  try {
+    if (hasUnsafeValue(database)) {
+      throw new Error('Paramètres de connexion invalides');
+    }
+
+    await fs.promises.access(backup.filepath, fs.constants.R_OK).catch(() => {
+      throw new Error('Fichier de sauvegarde introuvable');
+    });
+
+    await runCommand(buildRestoreCommand(database, decrypt(database.password), backup.filepath));
+    await logEvent({
+      type: 'restore_success',
+      level: 'success',
+      message: `Restauration de ${database.name} réussie (${backup.filename})`,
+      database,
+      backup,
+    });
+    return { ok: true };
+  } catch (error) {
+    console.error(`Restore of backup ${backup.backup_id} failed:`, error.message);
+
+    const reason = toBackupMessage(error) ?? (/introuvable/.test(error.message) ? error.message : 'Erreur pendant la restauration');
+    await logEvent({
+      type: 'restore_failed',
+      level: 'error',
+      message: `Échec de la restauration de ${database.name} (${backup.filename}) : ${reason}`,
+      details: error.message,
+      database,
+      backup,
+    });
+
+    return { ok: false, error: reason };
+  }
+}
+
+// Removes a backup file, or every backup file of a database
+async function removeBackupFiles({ filepath, databaseId }) {
+  if (filepath) {
+    await fs.promises.rm(filepath, { force: true });
+  }
+  if (databaseId !== undefined) {
+    await fs.promises.rm(path.join(BACKUP_DIR, String(databaseId)), { recursive: true, force: true });
+  }
+}
+
+module.exports = { createBackup, isBackupRunning, restoreBackup, removeBackupFiles };
