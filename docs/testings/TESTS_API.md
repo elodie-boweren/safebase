@@ -55,7 +55,7 @@ Before step 14 (or after having added a database manually) :
 docker exec -it safebase_postgres psql -U safebase -d demo_postgres -c "SELECT name, password FROM databases;"
 ```
 
-The password must appear with format `iv:hexadécimal`, never clear.
+The password must appear in `iv:cipher`, never in plain text.
 
 **A user can never delete the database of someone else.**
 Create a second account, connect with it, then do `DELETE /databases/<id of a database of the first user account>` :
