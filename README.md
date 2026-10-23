@@ -194,11 +194,27 @@ Tests will cover areas such as:
 * error handling
 * relevant frontend components
 
-Potential testing tools include:
+Testing tools include:
 
 * Jest
 * Vitest
 * Cypress
+
+**Unit tests** run on your computer (not in Docker) and do not need the containers to be started:
+the databases and the dump tools are mocked.
+
+| Part     | Tool                             | Location               | Command                          |
+| -------- | -------------------------------- | ---------------------- | -------------------------------- |
+| API      | Jest                             | `api/tests/unit/`      | `cd api && npm test`             |
+| Frontend | Vitest + React Testing Library   | `frontend/tests/unit/` | `cd frontend && npm test`        |
+
+After pulling, run `npm install` in `api/` and `frontend/` to get the test tools.
+
+Test files follow the acceptance test plan ([docs/testings/SAFEBASE - TestPlan.pdf](docs/testings/SAFEBASE%20-%20TestPlan.pdf)):
+each test name references the case it covers (e.g. `US02-07`).
+Cases that need the full stack (deployment, UI, real restores) are tested manually,
+and the API endpoints with the Postman collection ([docs/testings/TESTS_API.md](docs/testings/TESTS_API.md)).
+
 
 ---
 
