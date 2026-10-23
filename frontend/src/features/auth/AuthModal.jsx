@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Logo from '../../components/Logo'
 import AuthField from './AuthField'
-import { authenticateUser, mockUser } from '../../data/mocks'
+import { login, register } from '../../services/api'
 
 function AuthModal({ mode = 'login' }) {
   const navigate = useNavigate()
   const isLogin = mode === 'login'
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -20,7 +21,7 @@ function AuthModal({ mode = 'login' }) {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     setError('')
 
@@ -29,16 +30,24 @@ function AuthModal({ mode = 'login' }) {
       return
     }
 
-    if (isLogin) {
-      const user = authenticateUser(form.email, form.password)
-      if (!user) {
-        setError('Email ou mot de passe incorrect.')
-        return
+    setSubmitting(true)
+    try {
+      if (!isLogin) {
+        await register(form.email.split('@')[0], form.email, form.password)
       }
+      await login(form.email, form.password)
+      navigate('/dashboard')
+    } catch (err) {
+      if (err.status === 401) {
+        setError('Email ou mot de passe incorrect.')
+      } else if (!isLogin && err.status === 400) {
+        setError('Inscription impossible : cet email est peut-être déjà utilisé.')
+      } else {
+        setError(err.message)
+      }
+    } finally {
+      setSubmitting(false)
     }
-
-    // Static UI only — no backend yet
-    navigate('/dashboard')
   }
 
   return (
@@ -86,20 +95,15 @@ function AuthModal({ mode = 'login' }) {
 
         {error ? <p className="auth-error">{error}</p> : null}
 
-        <button type="submit" className="auth-submit">
+        <button type="submit" className="auth-submit" disabled={submitting}>
           {isLogin ? 'Se connecter' : "S'inscrire"}
         </button>
       </form>
 
       {isLogin ? (
-        <>
-          <p className="auth-hint">
-            Demo : {mockUser.email} / {mockUser.password}
-          </p>
-          <p className="auth-switch">
-            <Link to="/inscription">Pas de compte ? S&apos;inscrire</Link>
-          </p>
-        </>
+        <p className="auth-switch">
+          <Link to="/inscription">Pas de compte ? S&apos;inscrire</Link>
+        </p>
       ) : (
         <p className="auth-switch">
           <Link to="/">Déjà un compte ? Se connecter</Link>

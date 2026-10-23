@@ -17,6 +17,12 @@ import {
   formatHost,
 } from '../../data/mocks'
 
+const TRIGGER_LABELS = {
+  manual: 'manuelle',
+  scheduled: 'auto',
+  pre_restore: 'avant restauration',
+}
+
 function SelectedDatabasesCard({
   database,
   versions,
@@ -24,8 +30,12 @@ function SelectedDatabasesCard({
   onDeleteBackup,
   onDownloadBackup,
   onRestoreBackup,
+  onBackup,
+  backingUp = false,
 }) {
   const [confirm, setConfirm] = useState(null)
+  const failedCount = versions.filter((backup) => backup.status === 'failed').length
+  const latestSuccessId = versions.find((backup) => backup.status === 'success')?.id
 
   function closeConfirm() {
     setConfirm(null)
@@ -92,8 +102,13 @@ function SelectedDatabasesCard({
         className="card--fill"
         title="Bases sélectionnée"
         action={
-          <Button variant="primary" icon={<DownloadIcon />} disabled={!database}>
-            Sauvegarder maintenant
+          <Button
+            variant="primary"
+            icon={<DownloadIcon />}
+            disabled={!database || backingUp}
+            onClick={() => onBackup?.(database.id)}
+          >
+            {backingUp ? 'Sauvegarde en cours…' : 'Sauvegarder maintenant'}
           </Button>
         }
       >
@@ -117,74 +132,106 @@ function SelectedDatabasesCard({
               </IconButton>
             </div>
 
-            <h3 className="selected-db__subtitle">versions sauvegardées</h3>
+            <h3 className="selected-db__subtitle">
+              Versions sauvegardées
+              {versions.length > 0 ? (
+                <span className="selected-db__count">
+                  {versions.length} version(s)
+                  {failedCount > 0 ? <span className="selected-db__failed"> · {failedCount} en échec</span> : null}
+                </span>
+              ) : null}
+            </h3>
 
-            <div className="table-wrap">
-              <table className="data-table data-table--versions">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Taille</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {versions.map((backup) => {
-                    const canTransfer = backup.status === 'success'
+            {versions.length === 0 ? (
+              <EmptyState>Aucune sauvegarde pour cette base</EmptyState>
+            ) : (
+              <div className="table-wrap">
+                <table className="data-table data-table--versions">
+                  <thead>
+                    <tr>
+                      <th>Version</th>
+                      <th>Date</th>
+                      <th>Taille</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {versions.map((backup) => {
+                      const canTransfer = backup.status === 'success'
+                      const isLatest = backup.id === latestSuccessId
 
-                    return (
-                      <tr key={backup.id}>
-                        <td>{formatBackupDate(backup.createdAt)}</td>
-                        <td>{backup.size}</td>
-                        <td>{formatBackupStatus(backup.status)}</td>
-                        <td>
-                          <div className="action-row">
-                            {canTransfer ? (
-                              <>
-                                <IconButton
-                                  label="Télécharger"
-                                  tone="teal"
-                                  onClick={() =>
-                                    setConfirm({
-                                      type: 'download-backup',
-                                      backup,
-                                    })
-                                  }
-                                >
-                                  <DownloadIcon />
-                                </IconButton>
-                                <IconButton
-                                  label="Restaurer"
-                                  tone="teal"
-                                  onClick={() =>
-                                    setConfirm({
-                                      type: 'restore-backup',
-                                      backup,
-                                    })
-                                  }
-                                >
-                                  <RestoreIcon />
-                                </IconButton>
-                              </>
+                      return (
+                        <tr key={backup.id} className={`version-row version-row--${backup.status}`}>
+                          <td>
+                            <span className="version-row__number">v{backup.version}</span>
+                            {isLatest ? <span className="version-row__latest">dernière</span> : null}
+                          </td>
+                          <td>
+                            {formatBackupDate(backup.createdAt)}
+                            <span className="version-row__trigger">
+                              {TRIGGER_LABELS[backup.triggerType] ?? backup.triggerType}
+                            </span>
+                          </td>
+                          <td>{backup.size}</td>
+                          <td>
+                            <span className={`backup-status backup-status--${backup.status}`}>
+                              {formatBackupStatus(backup.status)}
+                            </span>
+                            {backup.error ? (
+                              <span className="version-row__error" title={backup.error}>
+                                {backup.error}
+                              </span>
                             ) : null}
-                            <IconButton
-                              label="Supprimer"
-                              tone="danger"
-                              onClick={() =>
-                                setConfirm({ type: 'delete-backup', backup })
-                              }
-                            >
-                              <TrashIcon />
-                            </IconButton>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                          <td>
+                            <div className="action-row">
+                              {canTransfer ? (
+                                <>
+                                  <IconButton
+                                    label="Télécharger"
+                                    tone="teal"
+                                    onClick={() =>
+                                      setConfirm({
+                                        type: 'download-backup',
+                                        backup,
+                                      })
+                                    }
+                                  >
+                                    <DownloadIcon />
+                                  </IconButton>
+                                  <IconButton
+                                    label="Restaurer"
+                                    tone="teal"
+                                    onClick={() =>
+                                      setConfirm({
+                                        type: 'restore-backup',
+                                        backup,
+                                      })
+                                    }
+                                  >
+                                    <RestoreIcon />
+                                  </IconButton>
+                                </>
+                              ) : null}
+                              <IconButton
+                                label="Supprimer"
+                                tone="danger"
+                                onClick={() =>
+                                  setConfirm({ type: 'delete-backup', backup })
+                                }
+                              >
+                                <TrashIcon />
+                              </IconButton>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </Card>
@@ -201,6 +248,7 @@ function SelectedDatabasesCard({
       <ConfirmModal
         open={confirm?.type === 'restore-backup'}
         title={restoreTitle}
+        description="Les données actuelles de la base seront remplacées par celles de cette version."
         confirmLabel="Restaurer"
         confirmVariant="primary"
         onCancel={closeConfirm}
