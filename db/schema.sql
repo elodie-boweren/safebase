@@ -41,11 +41,18 @@ CREATE TABLE IF NOT EXISTS backups (
   database_id INT REFERENCES databases(database_id) ON DELETE CASCADE
 );
 
+-- notification history: every action (level info/success) and every failure (level error)
+-- names are copied so the history survives the deletion of a database or a backup
 CREATE TABLE IF NOT EXISTS alerts (
   alert_id SERIAL PRIMARY KEY,
   type VARCHAR(50) NOT NULL,
+  level VARCHAR(20) NOT NULL DEFAULT 'error',
   message TEXT,
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
-  backup_id INT REFERENCES backups(backup_id) ON DELETE CASCADE
+  user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+  database_id INT REFERENCES databases(database_id) ON DELETE SET NULL,
+  database_name VARCHAR(255),
+  backup_id INT REFERENCES backups(backup_id) ON DELETE SET NULL,
+  backup_filename VARCHAR(255)
 );
