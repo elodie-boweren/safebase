@@ -1,68 +1,67 @@
-# Tester l'API SafeBase avec Postman
+# Testing SafeBase API with Postman
 
-## 1. Lancer le projet
+## 1. Start the project
 
-À la racine du projet :
+At the project root :
 
 ```
 docker compose up --build -d
 ```
 
-Vérifier que tout tourne : `docker compose ps`
-Voir les logs de l'API : `docker compose logs -f backend`
+Check that everything is running : `docker compose ps`
+See API logs : `docker compose logs -f backend`
 
-> Si une requête renvoie `relation "users" does not exist`, les tables n'ont pas été créées
-> (le fichier `db/schema.sql` ne s'exécute qu'à la première création du volume Postgres).
-> Lancer `docker compose down -v` puis `docker compose up --build -d`.
-> **Attention : `-v` efface les données des bases.**
+> If the request comes back with `relation "users" does not exist`, the tables haven't been created
+> (the file `db/schema.sql` only runsupon creation of the Postgres volume).
+> Run `docker compose down -v` then `docker compose up --build -d`.
+> **Attention : `-v` deletes data from the databases.**
 
-## 2. Importer la collection
+## 2. Import the collection
 
-1. Ouvrir Postman → **Import**
-2. Choisir le fichier `docs/testings/SafeBase_API.postman_collection.json`
-3. Clic droit sur la collection **SafeBase API** → **Run collection** → **Run**
+1. Open Postman → **Import**
+2. Select the file `docs/testings/SafeBase_API.postman_collection.json`
+3. Right click on the collection **SafeBase API** → **Run collection** → **Run**
 
-Les requêtes s'exécutent dans l'ordre. Le token de connexion et l'id de la base créée
-sont enregistrés automatiquement : il n'y a rien à copier-coller.
-Chaque requête contient des tests (onglet **Test Results**) : tout doit être vert.
+The requests are run in the order they are shown. The connection token and base id of the base created are saved automatically: there is nothing to copy-paste.
+Every request conatins tests (tab **Test Results**) : everything must be green. 
 
-## 3. Ce qui est testé
+## 3. What is tested
 
-| # | Requête | Méthode | Route | Résultat attendu |
+| # | Request | Method | Route | Expected results |
 |---|---|---|---|---|
 | 1 | Health check | GET | `/api/health` | 200 `{"status":"ok"}` |
 | 2 | Racine | GET | `/` | 200 `SafeBase API is running` |
-| 3 | Connexion à Postgres | GET | `/test-db` | 200 `Base connectée...` |
-| 4 | Inscription | POST | `/auth/register` | 201, sans le mot de passe |
-| 5 | Inscription, email déjà utilisé | POST | `/auth/register` | 400 |
-| 6 | Connexion, mauvais mot de passe | POST | `/auth/login` | 401 `Identifiants invalides` |
-| 7 | Connexion | POST | `/auth/login` | 200 + `token` |
-| 8 | Profil | GET | `/me` 🔒 | 200 + `user_id` |
-| 9 | Sans token | GET | `/databases` | 401 `Token manquant` |
-| 10 | Token invalide | GET | `/databases` | 403 `Token invalide ou expiré` |
-| 11 | Ajouter une base | POST | `/databases` 🔒 | 201, sans le mot de passe |
-| 12 | Lister mes bases | GET | `/databases` 🔒 | 200, contient la base créée |
-| 13 | Supprimer une base inexistante | DELETE | `/databases/999999` 🔒 | 404 `Base introuvable` |
-| 14 | Supprimer la base | DELETE | `/databases/:id` 🔒 | 200 `Base supprimée` |
+| 3 | Connection to Postgres | GET | `/test-db` | 200 `Base connectée...` |
+| 4 | Inscription | POST | `/auth/register` | 201, without the password |
+| 5 | Registration, email already used | POST | `/auth/register` | 400 |
+| 6 | Connection, incorrect password | POST | `/auth/login` | 401 `Identifiants invalides` |
+| 7 | Connection | POST | `/auth/login` | 200 + `token` |
+| 8 | Profile | GET | `/me` 🔒 | 200 + `user_id` |
+| 9 | Without token | GET | `/databases` | 401 `Token manquant` |
+| 10 | Invalid token | GET | `/databases` | 403 `Token invalide ou expiré` |
+| 11 | Add a base | POST | `/databases` 🔒 | 201, sans le mot de passe |
+| 12 | List my databases | GET | `/databases` 🔒 | 200, contains the base created |
+| 13 | Delete a non-existing base | DELETE | `/databases/999999` 🔒 | 404 `Base introuvable` |
+| 14 | Delete a base | DELETE | `/databases/:id` 🔒 | 200 `Base supprimée` |
 
-🔒 = header `Authorization: Bearer <token>` requis
+🔒 = header `Authorization: Bearer <token>` necessary
 
-## 4. Vérifications manuelles (optionnel)
+## 4. Manual verification (optionnal)
 
-**Le mot de passe des bases est chiffré en base de données.**
-Avant l'étape 14 (ou après avoir ajouté une base à la main) :
+**The bases password is encrypted in the database.**
+Before step 14 (or after having added a database manually) :
 
 ```
 docker exec -it safebase_postgres psql -U safebase -d demo_postgres -c "SELECT name, password FROM databases;"
 ```
 
-Le mot de passe doit apparaître sous la forme `iv:hexadécimal`, jamais en clair.
+The password must appear with format `iv:hexadécimal`, never clear.
 
-**Une utilisatrice ne peut pas supprimer la base d'une autre.**
-Créer un 2ᵉ compte, se connecter avec, puis faire `DELETE /databases/<id d'une base du 1er compte>` :
-la réponse doit être **404**.
+**A user can never delete the database of someone else.**
+Create a second account, connect with it, then do `DELETE /databases/<id of a database of the first user account>` :
+the reply must be **404**.
 
-## 5. Limite connue
+## 5. Known limit
 
-`POST /databases` sans le champ `password` renvoie une erreur **500** :
-il n'y a pas encore de validation des champs.
+`POST /databases` without the password field `password` sends back a **500** error :
+there is no field validation yet.
