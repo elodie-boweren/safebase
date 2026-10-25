@@ -194,8 +194,7 @@ describe('createBackup', () => {
   });
 });
 
-describe('restoreBackup', () => {
-  // a backup file already on disk
+// a backup file already on disk
   function existingBackup(database) {
     const directory = path.join(BACKUP_DIR, String(database.database_id));
     fs.mkdirSync(directory, { recursive: true });
@@ -204,6 +203,7 @@ describe('restoreBackup', () => {
     return { backup_id: 99, filename: path.basename(filepath), filepath, database_id: database.database_id };
   }
 
+describe('restoreBackup', () => {
   test('PostgreSQL: runs psql in one transaction that stops at the first error (US04-05)', async () => {
     const backup = existingBackup(POSTGRES_DB);
 

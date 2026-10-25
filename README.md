@@ -16,6 +16,7 @@ The project aims to provide users with a simple way to manage database connectio
 * [Containerization](#-containerization)
 * [Testing](#-testing)
 * [Code Quality & Best Practices](#-code-quality--best-practices)
+* [Continuous Integration](#-continuous-integration)
 * [Installation](#-installation)
 * [Usage](#-usage)
 * [Project Management](#-project-management)
@@ -148,6 +149,8 @@ The overall architecture is structured around the following components:
 * **cron** for scheduled operations
 * native MySQL, MongoDB and PostgreSQL backup utilities
 * automated testing tools
+* **Oxlint** for linting
+* **GitHub Actions** for continuous integration
 
 ---
 
@@ -209,6 +212,9 @@ the databases and the dump tools are mocked.
 | Frontend | Vitest + React Testing Library   | `frontend/tests/unit/` | `cd frontend && npm test`        |
 
 After pulling, run `npm install` in `api/` and `frontend/` to get the test tools.
+`npm test` starts Vitest in watch mode in the frontend; use `npx vitest run` for a single run (as in the CI).
+
+Unit tests also run automatically on every Pull Request (see [Continuous Integration](#-continuous-integration)).
 
 Test files follow the acceptance test plan ([docs/testings/SAFEBASE - TestPlan.pdf](docs/testings/SAFEBASE%20-%20TestPlan.pdf)):
 each test name references the case it covers (e.g. `US02-07`).
@@ -232,9 +238,27 @@ Naming conventions apply to:
 * database objects;
 * code organization.
 
+### Linting
+
+The API and the frontend are both checked with [Oxlint](https://oxc.rs/docs/guide/usage/linter), a fast JavaScript linter that detects likely bugs and misuse of frameworks without running the code.
+
+| Part     | Configuration                                    | Main rules                                                                |
+| -------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
+| API      | [api/.oxlintrc.json](api/.oxlintrc.json)           | Node.js and Jest plugins, `correctness` errors, `suspicious` warnings, `eqeqeq` |
+| Frontend | [frontend/.oxlintrc.json](frontend/.oxlintrc.json) | React plugin, `rules-of-hooks`                                            |
+
+Run it from `api/` or `frontend/`:
+
+```bash
+npm run lint
+```
+
+Errors make the command (and the CI) fail; warnings are only reported.
+The `oxc/no-async-endpoint-handlers` rule is disabled in the API: Express 5 forwards errors from `async` handlers natively.
+
 ### Code Review
 
-Pull Requests must be **reviewed and approved by another team member** before they can be merged.
+Pull Requests must **pass the CI checks** and be **reviewed and approved by another team member** before they can be merged.
 
 The development workflow is:
 
@@ -244,6 +268,8 @@ Create branch
 Development
      ↓
 Pull Request
+     ↓
+CI checks (lint, tests, build)
      ↓
 Code Review
      ↓
@@ -257,6 +283,37 @@ Merge
 ### Documentation
 
 Important technical decisions and source code should be properly documented.
+
+---
+
+## Continuous Integration
+
+The CI runs with **GitHub Actions**, defined in [.github/workflows/ci.yml](.github/workflows/ci.yml).
+
+It is triggered on:
+
+* every **Pull Request** targeting `main`;
+* every **push** on `main` (e.g. after a merge).
+
+Two jobs run in parallel on an Ubuntu runner with **Node.js 22**:
+
+| Job                              | Directory   | Steps                                                       |
+| -------------------------------- | ----------- | ----------------------------------------------------------- |
+| `API (tests Jest)`               | `api/`      | `npm ci` → `npm run lint` → `npm test`                      |
+| `Frontend (lint, tests, build)`  | `frontend/` | `npm ci` → `npm run lint` → `npx vitest run` → `npm run build` |
+
+* `npm ci` installs the exact versions from `package-lock.json` (npm cache is enabled to speed up runs).
+* The CI only runs the unit tests: databases and dump tools are mocked, so no Docker container is needed.
+* `npm run build` checks that the frontend compiles.
+
+The result is shown at the bottom of each Pull Request and in the **Actions** tab of the repository. If a job fails, open it to read the logs of the failing step.
+
+To check your changes before pushing, run the same commands locally:
+
+```bash
+cd api && npm ci && npm run lint && npm test
+cd ../frontend && npm ci && npm run lint && npx vitest run && npm run build
+```
 
 ---
 
@@ -312,8 +369,6 @@ npm run dev
 ```
 
 The interface is available at http://localhost:5173.
-
-For now the frontend uses mock data (`frontend/src/data/mocks.js`). Demo login: `emma@safebase.dev` / `safebase123`.
 
 ### Useful commands
 
@@ -372,15 +427,22 @@ Once the application is running, users will be able to:
 ```text
 safebase/
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml        # GitHub Actions CI (lint, tests, build)
+│
 ├── api/                  # REST API (Node.js / Express)
 │   ├── Dockerfile
+│   ├── .oxlintrc.json    # linter configuration
 │   ├── server.js         # routes and server entry point
 │   ├── db.js             # PostgreSQL connection pool
-│   └── encryption.js     # encryption of stored DB passwords
+│   ├── encryption.js     # encryption of stored DB passwords
+│   └── tests/unit/       # Jest unit tests
 │
 ├── frontend/             # React application (Vite)
+│   ├── .oxlintrc.json    # linter configuration
 │   ├── src/
-│   └── tests/
+│   └── tests/unit/       # Vitest unit tests
 │
 ├── db/
 │   └── schema.sql        # application schema, loaded on first PostgreSQL start
