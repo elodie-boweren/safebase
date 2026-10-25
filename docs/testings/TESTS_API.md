@@ -39,7 +39,7 @@ Every request conatins tests (tab **Test Results**) : everything must be green.
 | 8 | Profile | GET | `/me` 🔒 | 200 + `user_id` |
 | 9 | Without token | GET | `/databases` | 401 `Token manquant` |
 | 10 | Invalid token | GET | `/databases` | 403 `Token invalide ou expiré` |
-| 11 | Add a base | POST | `/databases` 🔒 | 201, sans le mot de passe |
+| 11 | Add a base | POST | `/databases` 🔒 | 201, without the password |
 | 12 | List my databases | GET | `/databases` 🔒 | 200, contains the base created |
 | 13 | Delete a non-existing base | DELETE | `/databases/999999` 🔒 | 404 `Base introuvable` |
 | 14 | Delete a base | DELETE | `/databases/:id` 🔒 | 200 `Base supprimée` |
@@ -57,7 +57,7 @@ docker exec -it safebase_postgres psql -U safebase -d demo_postgres -c "SELECT n
 
 The password must appear in `iv:cipher`, never in plain text.
 
-**A user can never delete the database of someone else.**
+**A user can never delete someone else's database.**
 Create a second account, connect with it, then do `DELETE /databases/<id of a database of the first user account>` :
 the reply must be **404**.
 
