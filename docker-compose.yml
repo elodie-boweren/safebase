@@ -78,6 +78,21 @@ services:
       - postgres
       - mongodb
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # URL of the API as seen from the browser
+        VITE_API_URL: http://localhost:3000
+    container_name: safebase_frontend
+    restart: unless-stopped
+    # same port as "npm run dev": the API only accepts requests from http://localhost:5173 (CORS)
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   mysql_data:
   postgres_data:

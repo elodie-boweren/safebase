@@ -14,15 +14,18 @@ Demo login: `emma@safebase.dev` / `safebase123`
 
 ## Getting started
 
+The frontend runs in Docker with the rest of the project: from the root, `docker compose up --build -d`, then open [http://localhost:5173](http://localhost:5173). The image builds the app with Vite and serves it with nginx (see `Dockerfile` and `nginx.conf`).
+
+For hot reload while developing, stop the container and use Vite:
+
 ```bash
+docker compose stop frontend
 cd frontend
 npm install
 npm run dev
 ```
 
-The app runs on [http://localhost:5173](http://localhost:5173) by default.
-
-When the API is ready, replace mocks with calls from `src/services/api.js` (`http://localhost:3000`, overridable with `VITE_API_URL`).
+The app calls the API at `http://localhost:3000` (`src/services/api.js`, overridable with `VITE_API_URL`; in Docker it is a build argument of the `frontend` service).
 
 ### Scripts
 

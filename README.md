@@ -170,15 +170,17 @@ Restore operations will use the appropriate tools for each database system.
 
 ## Containerization
 
-The backend and the databases run with **Docker Compose**. The frontend currently runs locally with Vite (it is not containerized yet).
+The whole application runs with **Docker Compose**: one command starts the frontend, the API and the databases.
 
-| Service (`docker-compose.yml`) | Container           | Port    |
-| ------------------------------ | ------------------- | ------- |
-| `backend` (built from `api/`)  | `safebase_backend`  | `3000`  |
-| `postgres`                     | `safebase_postgres` | `5432`  |
-| `mysql`                        | `safebase_mysql`    | `3306`  |
-| `mongodb`                      | `safebase_mongo`    | `27017` |
-| Frontend (outside Docker)      | —                   | `5173`  |
+| Service (`docker-compose.yml`)     | Container           | Port    |
+| ---------------------------------- | ------------------- | ------- |
+| `frontend` (built from `frontend/`) | `safebase_frontend` | `5173`  |
+| `backend` (built from `api/`)      | `safebase_backend`  | `3000`  |
+| `postgres`                         | `safebase_postgres` | `5432`  |
+| `mysql`                            | `safebase_mysql`    | `3306`  |
+| `mongodb`                          | `safebase_mongo`    | `27017` |
+
+The frontend image builds the React app with Vite, then serves the static files with nginx ([frontend/Dockerfile](frontend/Dockerfile), [frontend/nginx.conf](frontend/nginx.conf)). It is exposed on port `5173` because the API only accepts requests from `http://localhost:5173` (CORS).
 
 Docker makes it easier to reproduce the development environment and run the different components of the application consistently.
 
@@ -323,7 +325,7 @@ cd ../frontend && npm ci && npm run lint && npx vitest run && npm run build
 
 * **Git**
 * **Docker Desktop** (includes Docker Compose) — see [DOCKER.md](DOCKER.md) for installation on Windows, macOS and Linux
-* **Node.js 22** (LTS) and npm — required to run the frontend
+* **Node.js 22** (LTS) and npm — only needed to run the tests, the linter or the frontend outside Docker
 
 Ports `3000`, `3306`, `5432`, `27017` and `5173` must be free. If MySQL, PostgreSQL or MongoDB is already installed and running on your computer, stop it first, otherwise the containers will fail to start.
 
@@ -338,7 +340,7 @@ cd safebase
 
 No `.env` file is required for now: development values are already set in `docker-compose.yml`. See [.env.example](.env.example) for the variables that can be overridden.
 
-### 3. Start the backend and the databases (Docker)
+### 3. Start the application (Docker)
 
 Make sure Docker Desktop is running, then from the root of the project:
 
@@ -346,7 +348,7 @@ Make sure Docker Desktop is running, then from the root of the project:
 docker compose up --build -d
 ```
 
-This command builds the backend image from `api/Dockerfile`, installs its dependencies and starts the API, PostgreSQL, MySQL and MongoDB containers.
+This command builds the frontend and API images and starts the frontend, the API, PostgreSQL, MySQL and MongoDB containers.
 
 On the first start, PostgreSQL automatically creates the application tables from [db/schema.sql](db/schema.sql).
 
@@ -358,17 +360,11 @@ docker compose ps
 
 Then open http://localhost:3000/api/health in a browser: a JSON response confirms that the API is running.
 
-### 4. Start the frontend
+### 4. Open the application
 
-In a second terminal:
+The interface is available at http://localhost:5173. Create an account with « S'inscrire », then log in.
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The interface is available at http://localhost:5173.
+After a change in `frontend/` or `api/`, run `docker compose up --build -d` again to rebuild the images.
 
 ### Useful commands
 
@@ -376,7 +372,8 @@ The interface is available at http://localhost:5173.
 | --------------------------------- | ------------------------------------------------------------ |
 | `docker compose ps`               | List the containers and their state                          |
 | `docker compose logs -f backend`  | Follow the API logs                                          |
-| `docker compose up --build -d`    | Rebuild the API after a change in `api/` (e.g. new package)  |
+| `docker compose logs -f frontend` | Follow the nginx logs of the frontend                        |
+| `docker compose up --build -d`    | Rebuild the images after a change in `frontend/` or `api/`   |
 | `docker compose down`             | Stop the containers (data is kept)                           |
 | `docker compose down -v`          | Stop the containers **and delete all database data**         |
 
@@ -392,6 +389,17 @@ docker compose up --build -d
 
 **A container fails to start with "port is already allocated"**
 Another program is using that port (often a local MySQL or PostgreSQL). Stop it and run `docker compose up -d` again.
+
+### Running the frontend outside Docker (optional)
+
+For hot reload while working on the interface, stop the frontend container (it uses port `5173`) and start Vite:
+
+```bash
+docker compose stop frontend
+cd frontend
+npm install
+npm run dev
+```
 
 ### Running the API outside Docker (optional)
 
