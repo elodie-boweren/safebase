@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["oxc", "unicorn", "node", "jest"],
+  "env": {
+    "node": true,
+    "jest": true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "eqeqeq": "error",
+    "no-console": "off",
+    "oxc/no-async-endpoint-handlers": "off" //unnecessary as we use Express 5, which forwards async errors natively.
+  },
+  "ignorePatterns": ["node_modules", "backups"]
+}
